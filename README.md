@@ -37,3 +37,10 @@ Achtung: Manche Nummern stehen im LV doppelt (Teil 02 wiederholt Teil 01 mit EP 
 3. Stunden Tiefbau / Montage eintragen. Rechts stehen sofort Erlös, Kosten (h × 90 €/h), Deckungsbeitrag, Marge,
    €/h erzielt, Soll-Stunden und die Ampel (grün ≥ 15 % Marge, gelb 0–15 %, rot = Verlust).
 4. PDF für die Akte, Speichern als JSON für später.
+
+## Online / Deploy
+
+- Live: https://rothgmbh-swk-aufmass.netlify.app/ (Netlify-Site `rothgmbh-swk-aufmass`, ID in `netlify-site.json`)
+- Repo: https://github.com/anhomei/SWK-Aufmass (öffentlich, ohne LV-Preise und ohne Nachkalkulation)
+- Update: `python build.py` → `python deploy.py` (Token aus `tools/_deploy/.env`) → `git commit` + `git push`
+- Kein Auto-Deploy bei Push: Netlify ist nicht mit GitHub verknüpft, deploy.py lädt `site/` direkt hoch.
