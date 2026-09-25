@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nachkalkulation SWK – Roth GmbH Tiefbau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --red:#EE1D25; --red-dark:#B3151B; --red-light:#FDECEC;
+  --ink:#242021; --text:#3C3C3C; --muted:#696667;
+  --surface:#F4F3F3; --border:#D9D7D7; --card:#FFFFFF;
+  --ok:#4F7942; --ok-bg:#E8F1E5; --warn:#C98500; --warn-bg:#FDF3DC; --bad:#D32F2F; --bad-bg:#FBE4E4;
+  --filled:#FFF8D6;
+  --font-display:'Oswald', 'Arial Narrow', sans-serif;
+  --font-body:'Inter', system-ui, 'Segoe UI', sans-serif;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--surface); color:var(--text); font-family:var(--font-body); font-size:13px; }
+header { background:var(--ink); color:#fff; border-bottom:4px solid var(--red); }
+header .in { max-width:1400px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; gap:14px; }
+header img { height:44px; background:#fff; border-radius:4px; padding:2px; }
+header h1 { font-family:var(--font-display); font-weight:600; font-size:21px; letter-spacing:.04em; text-transform:uppercase; margin:0; }
+header p { margin:0; font-size:12px; color:#cfcccc; }
+header .btns { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+.btn { font-family:var(--font-body); font-size:12.5px; font-weight:600; border:1px solid transparent; border-radius:4px; padding:7px 12px; cursor:pointer; background:#fff; color:var(--ink); }
+.btn:hover { filter:brightness(.95); }
+.btn-red { background:var(--red); color:#fff; }
+.btn-red:hover { background:var(--red-dark); filter:none; }
+.btn-ghost { background:transparent; color:#fff; border-color:#6b6768; }
+.btn-small { padding:4px 9px; font-size:12px; border-color:var(--border); }
+
+.wrap { max-width:1400px; margin:0 auto; padding:14px 16px 40px; display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:16px; align-items:start; }
+@media (max-width: 1050px) { .wrap { grid-template-columns:minmax(0,1fr); } }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:6px; }
+.card-h { font-family:var(--font-display); font-weight:600; font-size:14px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink);
+          padding:9px 12px; border-bottom:2px solid var(--red); display:flex; align-items:center; gap:10px; }
+.card-h .sum { margin-left:auto; font-family:var(--font-body); font-weight:700; letter-spacing:0; text-transform:none; font-size:14px; }
+.card-b { padding:12px; }
+
+.kopf { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+@media (max-width: 760px) { .kopf { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.fg { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.fg label { font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.fg input, .fg select, .fg textarea { font:inherit; border:1px solid #b9b6b6; border-radius:4px; padding:6px 8px; background:#fcfcfc; width:100%; }
+.fg input:focus, .fg select:focus, .fg textarea:focus { outline:2px solid var(--red); outline-offset:-1px; background:#fff; }
+.fg.wide { grid-column:span 2; }
+select#sparte { font-weight:700; }
+
+.toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:14px 0 10px; position:sticky; top:0; z-index:30;
+           background:var(--surface); padding:8px 0; }
+.jump { position:relative; flex:1 1 320px; max-width:520px; }
+.jump input { width:100%; font:inherit; font-size:14px; padding:8px 10px 8px 34px; border:2px solid var(--ink); border-radius:5px; }
+.jump input:focus { outline:none; border-color:var(--red); }
+.jump::before { content:"⌕"; position:absolute; left:11px; top:6px; font-size:18px; color:var(--muted); }
+.dd { position:absolute; left:0; right:0; top:100%; margin-top:2px; background:#fff; border:1px solid var(--border); border-radius:5px;
+      box-shadow:0 8px 24px rgba(0,0,0,.12); z-index:20; max-height:340px; overflow:auto; display:none; }
+.dd.open { display:block; }
+.dd div { padding:6px 10px; cursor:pointer; display:grid; grid-template-columns:96px 1fr auto; gap:8px; align-items:baseline; font-size:12.5px; }
+.dd div.act, .dd div:hover { background:var(--red-light); }
+.dd .nr { font-family:ui-monospace, Consolas, monospace; font-size:11.5px; color:var(--muted); }
+.dd .tag { font-size:10.5px; color:var(--muted); white-space:nowrap; }
+.dd .tag.in { color:var(--ok); font-weight:700; }
+.tgl { display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer; user-select:none; }
+.hint { font-size:11.5px; color:var(--muted); }
+
+.sheet { margin-bottom:16px; }
+table.pos { width:100%; border-collapse:collapse; }
+table.pos th { font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); text-align:left; padding:5px 6px; border-bottom:1px solid var(--border); background:#FAFAFA; }
+table.pos td { padding:3px 6px; border-bottom:1px solid #EEEDED; vertical-align:middle; }
+table.pos tr.sec td { background:#F1F0F0; font-family:var(--font-display); font-weight:500; font-size:12.5px; letter-spacing:.04em; color:var(--ink); padding:6px; border-bottom:1px solid var(--border); }
+table.pos tr.sec td .ss { float:right; font-family:var(--font-body); font-weight:700; letter-spacing:0; }
+table.pos td.nr { font-family:ui-monospace, Consolas, monospace; font-size:11.5px; color:var(--muted); width:98px; white-space:nowrap; }
+table.pos td.eh { width:44px; text-align:center; color:var(--muted); }
+table.pos td.ep { width:84px; text-align:right; white-space:nowrap; color:var(--muted); }
+table.pos td.mg { width:96px; }
+table.pos td.gp { width:100px; text-align:right; font-weight:700; white-space:nowrap; color:var(--ink); }
+table.pos td.x { width:28px; text-align:center; }
+.mg input { width:100%; font:inherit; font-size:13.5px; text-align:right; padding:4px 6px; border:1px solid #c9c6c6; border-radius:3px; background:#fff; }
+.mg input:focus { outline:2px solid var(--red); outline-offset:-1px; background:#fffef4; }
+tr.filled td { background:var(--filled); }
+tr.filled td.gp { color:var(--ink); }
+tr.ep0 td.ep { color:var(--bad); font-weight:700; }
+tr.hide { display:none; }
+.sonst-in { width:100%; font:inherit; font-size:12.5px; padding:3px 5px; border:1px solid #d6d3d3; border-radius:3px; }
+.sonst-ep { width:78px; text-align:right; }
+.xbtn { border:none; background:none; color:var(--muted); cursor:pointer; font-size:14px; }
+.xbtn:hover { color:var(--bad); }
+.bad-num { outline:2px solid var(--bad) !important; }
+
+/* ── Auswertung ── */
+.side { position:sticky; top:12px; display:flex; flex-direction:column; gap:12px; }
+.ampel { border-radius:6px; padding:14px 14px 12px; border:1px solid var(--border); background:#fff; }
+.ampel.ok { background:var(--ok-bg); border-color:var(--ok); }
+.ampel.warn { background:var(--warn-bg); border-color:var(--warn); }
+.ampel.bad { background:var(--bad-bg); border-color:var(--bad); }
+.ampel .l { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ampel .big { display:flex; align-items:center; gap:10px; margin:4px 0 2px; }
+.ampel .dot { width:22px; height:22px; border-radius:50%; background:#bbb; flex:none; }
+.ampel.ok .dot { background:var(--ok); } .ampel.warn .dot { background:var(--warn); } .ampel.bad .dot { background:var(--bad); }
+.ampel .pct { font-family:var(--font-display); font-size:34px; font-weight:600; color:var(--ink); line-height:1; }
+.ampel .verdict { font-weight:700; font-size:14px; color:var(--ink); }
+.ampel .sub { font-size:12.5px; color:var(--text); margin-top:4px; }
+.kpis { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.kpi { background:#fff; border:1px solid var(--border); border-radius:6px; padding:9px 10px; }
+.kpi .l { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+.kpi .v { font-family:var(--font-display); font-size:21px; font-weight:600; color:var(--ink); margin-top:2px; white-space:nowrap; }
+.inp-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.inp-grid .fg input { text-align:right; font-size:14px; font-weight:600; }
+table.erg { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.erg th { text-align:right; font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; padding:4px 5px; border-bottom:1px solid var(--border); }
+table.erg th:first-child, table.erg td:first-child { text-align:left; }
+table.erg td { text-align:right; padding:4px 5px; border-bottom:1px solid #EEEDED; white-space:nowrap; }
+table.erg tr.strong td { font-weight:700; color:var(--ink); }
+.neg { color:var(--bad) !important; }
+.legend { font-size:11.5px; color:var(--muted); line-height:1.5; }
+.legend b { color:var(--text); }
+.m-only { }
+body.no-m .m-only { display:none !important; }
+</style>
+</head>
+<body>
+<header><div class="in">
+  <img src="__LOGO__" alt="Roth GmbH">
+  <div><h1>Nachkalkulation SWK</h1><p>Aufmaß des Monteurs prüfen &middot; THÜGA-LV 2026 &middot; nur intern</p></div>
+  <div class="btns">
+    <button class="btn btn-red" onclick="pdfExport()">PDF</button>
+    <button class="btn btn-ghost" onclick="speichern()">Speichern</button>
+    <button class="btn btn-ghost" onclick="laden()">Laden</button>
+    <button class="btn btn-ghost" onclick="neu()">Neu</button>
+  </div>
+</div></header>
+
+<div class="wrap">
+<main>
+  <div class="card">
+    <div class="card-h">Auftrag</div>
+    <div class="card-b kopf">
+      <div class="fg"><label for="sparte">Sparte / Aufmaßblatt</label>
+        <select id="sparte" onchange="sparteWechseln()">
+          <option value="wasser">Wasser (W T / W M)</option>
+          <option value="gas">Gas (G T / G M)</option>
+          <option value="strom">Strom (E T)</option>
+          <option value="koordiniert">Koordiniert (E/G/W)</option>
+        </select></div>
+      <div class="fg"><label for="k-aufnr">Auftragsnummer</label><input id="k-aufnr" data-k="aufnr"></div>
+      <div class="fg wide"><label for="k-ort">Ort / Straße</label><input id="k-ort" data-k="ort"></div>
+      <div class="fg"><label for="k-monteur">Monteur / Kolonne</label><input id="k-monteur" data-k="monteur"></div>
+      <div class="fg"><label for="k-von">Ausführung von</label><input id="k-von" type="date" data-k="von"></div>
+      <div class="fg"><label for="k-bis">Ausführung bis</label><input id="k-bis" type="date" data-k="bis"></div>
+      <div class="fg"><label for="k-intern">Interne Nr.</label><input id="k-intern" data-k="intern"></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="jump">
+      <input id="jump" placeholder="Pos.-Nr. oder Text aus dem Aufmaß eintippen – Enter springt zur Menge" autocomplete="off">
+      <div class="dd" id="jump-dd"></div>
+    </div>
+    <label class="tgl"><input type="checkbox" id="nur-bef" onchange="filterAnwenden()"> nur befüllte Positionen</label>
+  </div>
+  <p class="hint" style="margin:-4px 0 12px">Ablauf: letzte Ziffern der Pos.-Nr. tippen (z. B. <b>1220</b>) &rarr; <b>Enter</b> &rarr; Menge &rarr; <b>Enter</b> &rarr; nächste Pos.-Nr. &middot; <b>&darr;</b>/<b>&uarr;</b> in der Menge = Nachbarzeile &middot; Komma oder Punkt als Dezimaltrenner.</p>
+
+  <div id="sheets"></div>
+</main>
+
+<aside class="side">
+  <div class="ampel" id="ampel">
+    <div class="l">Bewertung</div>
+    <div class="big"><div class="dot"></div><div class="pct" id="a-pct">–</div><div class="verdict" id="a-verdict"></div></div>
+    <div class="sub" id="a-sub">Mengen und Stunden eintragen.</div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="l">Erlös laut Aufmaß</div><div class="v" id="k-erloes">0,00 €</div></div>
+    <div class="kpi"><div class="l">Deckungsbeitrag</div><div class="v" id="k-db">0,00 €</div></div>
+    <div class="kpi"><div class="l">Erzielter Stundensatz</div><div class="v" id="k-eurh">–</div></div>
+    <div class="kpi"><div class="l">Stunden-Puffer</div><div class="v" id="k-puffer">–</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">Stunden &amp; Kosten</div>
+    <div class="card-b">
+      <div class="inp-grid">
+        <div class="fg"><label for="h-T" id="h-T-l">Stunden Tiefbau</label><input id="h-T" inputmode="decimal" placeholder="0"></div>
+        <div class="fg m-only"><label for="h-M" id="h-M-l">Stunden Montage</label><input id="h-M" inputmode="decimal" placeholder="0"></div>
+        <div class="fg"><label for="satz">Verrechnungssatz €/h</label><input id="satz" inputmode="decimal" value="90,00"></div>
+        <div class="fg"><label for="fremd">Sonst. Kosten €</label><input id="fremd" inputmode="decimal" placeholder="0" title="Material, Entsorgung, Nachunternehmer … (nicht im Stundensatz enthalten)"></div>
+      </div>
+      <div class="fg" style="margin-top:8px"><label for="bem">Bemerkung</label><textarea id="bem" rows="2"></textarea></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">Ergebnis</div>
+    <div class="card-b" style="padding-top:6px">
+      <table class="erg" id="erg"></table>
+      <p class="legend" style="margin:10px 0 0">
+        <b>Kosten</b> = Stunden × Verrechnungssatz (+ sonst. Kosten). Der Satz von 90 €/h enthält Mittellohn, Gemeinkosten, AGK und Geräte – nicht den LV-Stundensatz verwenden.<br>
+        <b>Soll-Stunden</b> = Erlös ÷ Satz = so viele Stunden „bezahlt“ das Aufmaß.<br>
+        Ampel: <b style="color:var(--ok)">grün</b> ab <span id="g-gruen"></span> % Marge &middot; <b style="color:var(--warn)">gelb</b> 0 bis <span id="g-gruen2"></span> % &middot; <b style="color:var(--bad)">rot</b> Verlust.
+      </p>
+    </div>
+  </div>
+</aside>
+</div>
+
+<script>
+/* ════════ Daten (vom Build-Skript eingefügt) ════════ */
+const STRUKTUR = /*__STRUKTUR__*/null;
+const LV = /*__LV__*/[];
+const LOGO = '__LOGO__';
+const LV_NR = {};
+for (const p of LV) if (!(p.nr in LV_NR)) LV_NR[p.nr] = p;   // bei doppelter Nr. gilt der erste LV-Eintrag
+
+const GRENZE_GRUEN = 15;   // Marge in % ab der die Ampel grün ist
+document.getElementById('g-gruen').textContent = GRENZE_GRUEN;
+document.getElementById('g-gruen2').textContent = GRENZE_GRUEN;
+
+/* ════════ Zahlen ════════ */
+function parseDE(s) {
+  s = String(s ?? '').trim().replace(/\s|€/g, '');
+  if (!s) return 0;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  const v = Number(s);
+  return Number.isFinite(v) ? v : NaN;
+}
+const r2 = v => Math.round((v + Number.EPSILON) * 100) / 100;
+const nf2 = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const nf1 = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const nf3 = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const epTxt = (ep, eh) => (eh === 'EUR' ? nf3 : nf2).format(ep);   // EUR-Positionen: Faktor 1,035 inkl. Skonto
+const eur = v => nf2.format(v) + ' €';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const mengeTxt = (v, eh) => (eh === 'ST' && v % 1 === 0) ? String(v) : nf2.format(v);
+
+/* ════════ Zustand ════════
+   mengen: { 'T:50013201220': '1', ... }   (Rohtext wie eingegeben)
+   sonst:  [{ id, sheet, nr, bez, eh, ep, menge }]                     */
+let S = leererZustand('wasser');
+function leererZustand(sparte) {
+  return { sparte, kopf: {}, mengen: {}, sonst: [], stunden: { T: '', M: '' }, satz: '90,00', fremd: '', bem: '' };
+}
+let sonstSeq = 1;
+
+/* ════════ Aufbau ════════ */
+function sheetsDerSparte() { return STRUKTUR[S.sparte].sheets; }
+
+function render() {
+  const host = document.getElementById('sheets');
+  host.innerHTML = '';
+  const hatM = sheetsDerSparte().some(sh => sh.key === 'M');
+  document.body.classList.toggle('no-m', !hatM);
+  document.getElementById('h-T-l').textContent = 'Stunden ' + (sheetsDerSparte()[0].title.split(' — ')[0]);
+  const sm = sheetsDerSparte().find(sh => sh.key === 'M');
+  document.getElementById('h-M-l').textContent = 'Stunden ' + (sm ? sm.title.split(' — ')[0] : 'Montage');
+
+  for (const sh of sheetsDerSparte()) {
+    const card = document.createElement('section');
+    card.className = 'card sheet';
+    card.innerHTML = `<div class="card-h">Aufmaßblatt ${esc(sh.title)}<span class="sum" id="sum-${sh.key}">0,00 €</span></div>`;
+    const tbl = document.createElement('table');
+    tbl.className = 'pos';
+    tbl.innerHTML = '<thead><tr><th>Pos.-Nr.</th><th>Bezeichnung</th><th style="text-align:center">Einh.</th><th style="text-align:right">EP</th><th style="text-align:right">Menge</th><th style="text-align:right">GP</th><th></th></tr></thead>';
+    const tb = document.createElement('tbody');
+    sh.sections.forEach((sec, si) => {
+      const hr = document.createElement('tr');
+      hr.className = 'sec';
+      hr.dataset.sec = sh.key + si;
+      hr.innerHTML = `<td colspan="7">${esc(sec.title)}<span class="ss" id="ss-${sh.key}${si}"></span></td>`;
+      tb.appendChild(hr);
+      if (sec.sonst) {
+        const anchor = document.createElement('tr');
+        anchor.className = 'sonst-anchor';
+        anchor.dataset.sheet = sh.key;
+        anchor.innerHTML = `<td colspan="7"><button class="btn btn-small" onclick="sonstNeu('${sh.key}')">+ Position aus LV hinzufügen</button></td>`;
+        tb.appendChild(anchor);
+        return;
+      }
+      for (const r of sec.rows) {
+        const key = sh.key + ':' + r.nr;
+        const ep = LV_NR[r.nr]?.ep ?? 0;
+        const tr = document.createElement('tr');
+        tr.dataset.key = key;
+        tr.dataset.sec = sh.key + si;
+        if (ep === 0) tr.classList.add('ep0');
+        tr.innerHTML = `<td class="nr">${r.nr}</td><td>${esc(r.bez)}</td><td class="eh">${esc(r.eh)}</td>
+          <td class="ep" title="${ep === 0 ? 'EP im LV = 0 – Preis mit SWK klären' : ''}">${epTxt(ep, r.eh)}</td>
+          <td class="mg"><input inputmode="decimal" data-key="${key}" value="${esc(S.mengen[key] ?? '')}"></td>
+          <td class="gp"></td><td class="x"></td>`;
+        tb.appendChild(tr);
+      }
+    });
+    tbl.appendChild(tb);
+    card.appendChild(tbl);
+    host.appendChild(card);
+  }
+  for (const s of S.sonst) sonstZeileEinfuegen(s);
+  rechnen();
+  filterAnwenden();
+}
+
+/* ── Sonstiges-Zeilen (frei aus dem LV) ── */
+function sonstNeu(sheet, lvPos) {
+  const s = { id: sonstSeq++, sheet, nr: lvPos?.nr || '', bez: lvPos?.bez || '', eh: lvPos?.me || '', ep: lvPos ? epTxt(lvPos.ep, lvPos.me) : '', menge: '' };
+  S.sonst.push(s);
+  const tr = sonstZeileEinfuegen(s);
+  (lvPos ? tr.querySelector('.mg input') : tr.querySelector('.s-nr')).focus();
+  rechnen();
+  return tr;
+}
+
+function sonstZeileEinfuegen(s) {
+  const anchor = document.querySelector(`tr.sonst-anchor[data-sheet="${s.sheet}"]`);
+  const tr = document.createElement('tr');
+  tr.dataset.sid = s.id;
+  tr.dataset.sec = anchor.previousElementSibling?.dataset.sec || '';
+  // Abschnittskennung des Sonstiges-Kopfes suchen
+  let p = anchor.previousElementSibling;
+  while (p && !p.classList.contains('sec')) p = p.previousElementSibling;
+  tr.dataset.sec = p?.dataset.sec || '';
+  tr.innerHTML = `<td class="nr"><input class="sonst-in s-nr" placeholder="Pos.-Nr." value="${esc(s.nr)}"></td>
+    <td><input class="sonst-in s-bez" placeholder="Bezeichnung" value="${esc(s.bez)}"></td>
+    <td class="eh"><input class="sonst-in s-eh" style="text-align:center" value="${esc(s.eh)}"></td>
+    <td class="ep"><input class="sonst-in sonst-ep s-ep" inputmode="decimal" value="${esc(s.ep)}"></td>
+    <td class="mg"><input inputmode="decimal" data-sid="${s.id}" value="${esc(s.menge)}"></td>
+    <td class="gp"></td><td class="x"><button class="xbtn" title="Zeile entfernen" onclick="sonstWeg(${s.id})">✕</button></td>`;
+  anchor.parentNode.insertBefore(tr, anchor);
+  const nrIn = tr.querySelector('.s-nr');
+  nrIn.addEventListener('change', () => {
+    const p = LV_NR[nrIn.value.trim()];
+    if (p) {
+      s.nr = p.nr; s.bez = p.bez; s.eh = p.me; s.ep = epTxt(p.ep, p.me);
+      tr.querySelector('.s-bez').value = s.bez; tr.querySelector('.s-eh').value = s.eh; tr.querySelector('.s-ep').value = s.ep;
+      rechnen();
+    }
+  });
+  for (const [cls, f] of [['.s-nr', 'nr'], ['.s-bez', 'bez'], ['.s-eh', 'eh'], ['.s-ep', 'ep']]) {
+    tr.querySelector(cls).addEventListener('input', e => { s[f] = e.target.value; if (f === 'ep') rechnen(); });
+  }
+  return tr;
+}
+
+function sonstWeg(id) {
+  S.sonst = S.sonst.filter(s => s.id !== id);
+  document.querySelector(`tr[data-sid="${id}"]`)?.remove();
+  rechnen();
+}
+
+/* ════════ Eingaben ════════ */
+document.getElementById('sheets').addEventListener('input', e => {
+  const el = e.target;
+  if (!el.closest('td.mg')) return;
+  if (el.dataset.key) S.mengen[el.dataset.key] = el.value;
+  if (el.dataset.sid) { const s = S.sonst.find(x => x.id == el.dataset.sid); if (s) s.menge = el.value; }
+  rechnen();
+});
+
+document.getElementById('sheets').addEventListener('keydown', e => {
+  const el = e.target;
+  if (!el.closest('td.mg')) return;
+  if (e.key === 'Enter') {            // Enter: zurück in die Suche → nächste Pos.-Nr. aus dem Aufmaß
+    e.preventDefault();
+    document.getElementById('jump').focus();
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const alle = [...document.querySelectorAll('#sheets td.mg input')].filter(i => i.offsetParent !== null);
+    const ziel = alle[alle.indexOf(el) + (e.key === 'ArrowUp' ? -1 : 1)];
+    if (ziel) ziel.focus();
+  }
+});
+document.getElementById('sheets').addEventListener('focusin', e => {
+  if (e.target.closest('td.mg')) e.target.select();
+});
+
+document.querySelectorAll('[data-k]').forEach(el => el.addEventListener('input', () => { S.kopf[el.dataset.k] = el.value; }));
+document.getElementById('h-T').addEventListener('input', e => { S.stunden.T = e.target.value; rechnen(); });
+document.getElementById('h-M').addEventListener('input', e => { S.stunden.M = e.target.value; rechnen(); });
+document.getElementById('satz').addEventListener('input', e => { S.satz = e.target.value; rechnen(); });
+document.getElementById('fremd').addEventListener('input', e => { S.fremd = e.target.value; rechnen(); });
+document.getElementById('bem').addEventListener('input', e => { S.bem = e.target.value; });
+
+function hatEingaben() {
+  return Object.values(S.mengen).some(v => parseDE(v)) || S.sonst.length > 0;
+}
+
+function sparteWechseln() {
+  const neu = document.getElementById('sparte').value;
+  if (hatEingaben() && !confirm('Beim Wechsel der Sparte werden die eingetragenen Mengen verworfen. Fortfahren?')) {
+    document.getElementById('sparte').value = S.sparte;
+    return;
+  }
+  S.sparte = neu; S.mengen = {}; S.sonst = [];
+  if (neu === 'strom') S.stunden.M = '';
+  document.getElementById('h-M').value = S.stunden.M;
+  render();
+}
+
+/* ════════ Rechnen ════════ */
+function zeilen() {
+  // alle Positionen mit Menge ≠ 0 → [{sheet, secId, nr, bez, eh, ep, menge, gp}]
+  const out = [];
+  for (const sh of sheetsDerSparte()) {
+    sh.sections.forEach((sec, si) => {
+      if (sec.sonst) {
+        for (const s of S.sonst.filter(x => x.sheet === sh.key)) {
+          const m = parseDE(s.menge), ep = parseDE(s.ep);
+          if (m) out.push({ sheet: sh.key, sec: si, secTitle: sec.title, nr: s.nr, bez: s.bez, eh: s.eh, ep: ep || 0, menge: m, gp: r2(m * (ep || 0)), sid: s.id });
+        }
+        return;
+      }
+      for (const r of sec.rows) {
+        const m = parseDE(S.mengen[sh.key + ':' + r.nr]);
+        if (!m) continue;
+        const ep = LV_NR[r.nr]?.ep ?? 0;
+        out.push({ sheet: sh.key, sec: si, secTitle: sec.title, nr: r.nr, bez: r.bez, eh: r.eh, ep, menge: m, gp: r2(m * ep) });
+      }
+    });
+  }
+  return out;
+}
+
+function auswertung() {
+  const z = zeilen();
+  const satz = parseDE(S.satz) || 0;
+  const fremd = parseDE(S.fremd) || 0;
+  const hatM = sheetsDerSparte().some(sh => sh.key === 'M');
+  const teil = key => {
+    const erl = r2(z.filter(r => r.sheet === key && !Number.isNaN(r.gp)).reduce((a, r) => a + r.gp, 0));
+    const h = parseDE(S.stunden[key]) || 0;
+    const kost = r2(h * satz);
+    return { erl, h, kost, db: r2(erl - kost) };
+  };
+  const T = teil('T'), M = hatM ? teil('M') : { erl: 0, h: 0, kost: 0, db: 0 };
+  const G = { erl: r2(T.erl + M.erl), h: T.h + M.h, kost: r2(T.kost + M.kost + fremd) };
+  G.db = r2(G.erl - G.kost);
+  for (const o of [T, M, G]) {
+    o.marge = o.erl ? o.db / o.erl * 100 : null;
+    o.eurh = o.h ? o.erl / o.h : null;
+    o.soll = satz ? o.erl / satz : null;
+  }
+  G.soll = satz ? (G.erl - fremd) / satz : null;
+  return { z, T, M, G, satz, fremd, hatM };
+}
+
+function rechnen() {
+  const A = auswertung();
+  // Zeilen: GP + Markierung
+  document.querySelectorAll('#sheets tr[data-key], #sheets tr[data-sid]').forEach(tr => {
+    const inp = tr.querySelector('td.mg input');
+    const m = parseDE(inp.value);
+    inp.classList.toggle('bad-num', Number.isNaN(m));
+    let ep;
+    if (tr.dataset.key) ep = LV_NR[tr.dataset.key.split(':')[1]]?.ep ?? 0;
+    else ep = parseDE(tr.querySelector('.s-ep').value) || 0;
+    const gp = m ? r2(m * ep) : 0;
+    tr.querySelector('td.gp').textContent = m ? nf2.format(gp) : '';
+    tr.classList.toggle('filled', !!m);
+  });
+  // Abschnitts- und Blattsummen
+  const secSum = {};
+  for (const r of A.z) secSum[r.sheet + r.sec] = (secSum[r.sheet + r.sec] || 0) + r.gp;
+  document.querySelectorAll('#sheets tr.sec').forEach(tr => {
+    const v = secSum[tr.dataset.sec];
+    tr.querySelector('.ss').textContent = v ? eur(r2(v)) : '';
+  });
+  for (const sh of sheetsDerSparte()) {
+    document.getElementById('sum-' + sh.key).textContent = eur(A[sh.key].erl);
+  }
+
+  // Kennzahlen
+  const { T, M, G } = A;
+  document.getElementById('k-erloes').textContent = eur(G.erl);
+  const kdb = document.getElementById('k-db');
+  kdb.textContent = G.h || A.fremd ? eur(G.db) : '–';
+  kdb.classList.toggle('neg', G.db < 0 && (G.h || A.fremd));
+  document.getElementById('k-eurh').textContent = G.eurh ? nf2.format(G.eurh) + ' €/h' : '–';
+  const puf = document.getElementById('k-puffer');
+  if (G.h && G.soll !== null) {
+    const d = G.soll - G.h;
+    puf.textContent = (d >= 0 ? '+' : '') + nf1.format(d) + ' h';
+    puf.classList.toggle('neg', d < 0);
+  } else { puf.textContent = '–'; puf.classList.remove('neg'); }
+
+  // Ampel
+  const amp = document.getElementById('ampel');
+  amp.classList.remove('ok', 'warn', 'bad');
+  if (G.erl && (G.h || A.fremd)) {
+    const m = G.marge;
+    const cls = m >= GRENZE_GRUEN ? 'ok' : m >= 0 ? 'warn' : 'bad';
+    amp.classList.add(cls);
+    document.getElementById('a-pct').textContent = nf1.format(m) + ' %';
+    document.getElementById('a-verdict').textContent = { ok: 'Auskömmlich', warn: 'Knapp', bad: 'Verlust' }[cls];
+    document.getElementById('a-sub').innerHTML =
+      `Soll ${nf1.format(G.soll)} h &middot; Ist ${nf1.format(G.h)} h &middot; ${nf2.format(G.eurh || 0)} €/h erzielt`;
+  } else {
+    document.getElementById('a-pct').textContent = '–';
+    document.getElementById('a-verdict').textContent = '';
+    document.getElementById('a-sub').textContent = G.erl ? 'Stunden eintragen, um zu bewerten.' : 'Mengen und Stunden eintragen.';
+  }
+
+  // Ergebnis-Tabelle
+  const cols = A.hatM ? [['Tiefbau', T], ['Montage', M], ['Gesamt', G]] : [['Gesamt', G]];
+  const row = (lbl, f, cls = '') =>
+    `<tr class="${cls}"><td>${lbl}</td>${cols.map(([, o]) => { const [t, neg] = f(o); return `<td class="${neg ? 'neg' : ''}">${t}</td>`; }).join('')}</tr>`;
+  const pct = v => v === null ? '–' : nf1.format(v) + ' %';
+  document.getElementById('erg').innerHTML =
+    `<tr><th></th>${cols.map(([n]) => `<th>${n}</th>`).join('')}</tr>` +
+    row('Erlös', o => [eur(o.erl)]) +
+    row('Stunden (Ist)', o => [o.h ? nf2.format(o.h) + ' h' : '–']) +
+    row('Stunden (Soll)', o => [o.soll !== null && o.erl ? nf1.format(o.soll) + ' h' : '–']) +
+    row('Kosten', o => [eur(o.kost)]) +
+    row('Deckungsbeitrag', o => [eur(o.db), o.db < 0], 'strong') +
+    row('Marge', o => [pct(o.marge), o.marge !== null && o.marge < 0], 'strong') +
+    row('€ je Stunde', o => [o.eurh ? nf2.format(o.eurh) : '–']);
+  if (A.fremd) document.getElementById('erg').innerHTML +=
+    `<tr><td colspan="${cols.length + 1}" style="text-align:left;color:var(--muted);font-size:11.5px">inkl. sonstiger Kosten ${eur(A.fremd)} (nur in „Gesamt“)</td></tr>`;
+}
+
+/* ── Filter „nur befüllte“ ── */
+function filterAnwenden() {
+  const nur = document.getElementById('nur-bef').checked;
+  document.querySelectorAll('#sheets tr[data-key]').forEach(tr => tr.classList.toggle('hide', nur && !tr.classList.contains('filled')));
+}
+
+/* ════════ Schnellsuche / Sprung ════════ */
+const jump = document.getElementById('jump');
+const dd = document.getElementById('jump-dd');
+let treffer = [], aktiv = 0;
+
+jump.addEventListener('input', () => {
+  const q = jump.value.trim().toLowerCase();
+  if (q.length < 2) { dd.classList.remove('open'); treffer = []; return; }
+  const eigene = [];
+  for (const sh of sheetsDerSparte()) for (const sec of sh.sections) for (const r of sec.rows)
+    eigene.push({ sheet: sh.key, sheetTitle: sh.title, nr: r.nr, bez: r.bez, eh: r.eh, drin: true });
+  const passt = p => p.nr.includes(q) || p.bez.toLowerCase().includes(q);
+  const rang = p => p.nr.endsWith(q) ? 0 : p.nr.includes(q) ? 1 : 2;
+  const a = eigene.filter(passt).sort((x, y) => rang(x) - rang(y));
+  const schon = new Set(a.map(p => p.nr));
+  const b = LV.filter(p => !schon.has(p.nr) && passt(p)).sort((x, y) => rang(x) - rang(y))
+    .map(p => ({ nr: p.nr, bez: p.bez, eh: p.me, drin: false, lv: p }));
+  treffer = [...a, ...b].slice(0, 14);
+  aktiv = 0;
+  zeigeTreffer();
+});
+
+function zeigeTreffer() {
+  if (!treffer.length) { dd.innerHTML = '<div style="display:block;color:var(--muted)">Keine Treffer</div>'; dd.classList.add('open'); return; }
+  dd.innerHTML = treffer.map((t, i) =>
+    `<div data-i="${i}" class="${i === aktiv ? 'act' : ''}"><span class="nr">${t.nr}</span><span>${esc(t.bez)}</span>` +
+    `<span class="tag ${t.drin ? 'in' : ''}">${t.drin ? t.sheetTitle.split(' — ')[0] : 'LV → Sonstiges'}</span></div>`).join('');
+  dd.classList.add('open');
+}
+
+jump.addEventListener('keydown', e => {
+  if (!dd.classList.contains('open') || !treffer.length) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); aktiv = Math.min(aktiv + 1, treffer.length - 1); zeigeTreffer(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); aktiv = Math.max(aktiv - 1, 0); zeigeTreffer(); }
+  else if (e.key === 'Enter') { e.preventDefault(); waehle(treffer[aktiv]); }
+  else if (e.key === 'Escape') dd.classList.remove('open');
+});
+dd.addEventListener('mousedown', e => {
+  const d = e.target.closest('[data-i]');
+  if (d) { e.preventDefault(); waehle(treffer[+d.dataset.i]); }
+});
+jump.addEventListener('blur', () => setTimeout(() => dd.classList.remove('open'), 150));
+
+function waehle(t) {
+  dd.classList.remove('open');
+  jump.value = '';
+  let inp;
+  if (t.drin) {
+    const tr = document.querySelector(`#sheets tr[data-key="${t.sheet}:${t.nr}"]`);
+    tr.classList.remove('hide');
+    inp = tr.querySelector('td.mg input');
+  } else {
+    // LV-Position: Montage-Positionen (Kürzel „x M …“) aufs M-Blatt, sonst Tiefbau
+    const hatM = sheetsDerSparte().some(sh => sh.key === 'M');
+    const sheet = hatM && /^[A-Z/]+ M\b/.test(t.bez) ? 'M' : 'T';
+    inp = sonstNeu(sheet, t.lv).querySelector('td.mg input');
+  }
+  inp.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  inp.focus();
+}
+
+/* ════════ Speichern / Laden / Neu ════════ */
+function dateiname(endung) {
+  const a = (S.kopf.aufnr || 'ohne-Nr').replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const d = new Date().toISOString().slice(0, 10);
+  return `Nachkalkulation_${STRUKTUR[S.sparte].name}_${a}_${d}.${endung}`;
+}
+
+function speichern() {
+  const daten = { tool: 'swk-nachkalkulation', version: 1, gespeichert: new Date().toISOString(), ...S };
+  const blob = new Blob([JSON.stringify(daten, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = dateiname('json');
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function laden() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    f.text().then(txt => {
+      const d = JSON.parse(txt);
+      if (d.tool !== 'swk-nachkalkulation') throw new Error('Keine Nachkalkulations-Datei (Aufmaß-Dateien des Monteurs können nicht geladen werden).');
+      if (!STRUKTUR[d.sparte]) throw new Error('Unbekannte Sparte: ' + d.sparte);
+      S = { ...leererZustand(d.sparte), ...d };
+      S.sonst = (d.sonst || []).map(s => ({ ...s, id: sonstSeq++ }));
+      zustandInsFormular();
+      render();
+    }).catch(err => alert('Laden fehlgeschlagen: ' + err.message));
+  };
+  inp.click();
+}
+
+function neu() {
+  if (hatEingaben() && !confirm('Alle Eingaben verwerfen und neu beginnen?')) return;
+  S = leererZustand(document.getElementById('sparte').value);
+  zustandInsFormular();
+  render();
+}
+
+function zustandInsFormular() {
+  document.getElementById('sparte').value = S.sparte;
+  document.querySelectorAll('[data-k]').forEach(el => el.value = S.kopf[el.dataset.k] ?? '');
+  document.getElementById('h-T').value = S.stunden.T ?? '';
+  document.getElementById('h-M').value = S.stunden.M ?? '';
+  document.getElementById('satz').value = S.satz ?? '90,00';
+  document.getElementById('fremd').value = S.fremd ?? '';
+  document.getElementById('bem').value = S.bem ?? '';
+}
+
+/* ════════ PDF (jsPDF + AutoTable) ════════ */
+function pdfExport() {
+  if (!window.jspdf) { alert('PDF-Bibliothek nicht geladen – Internetverbindung prüfen und Seite neu laden.'); return; }
+  const A = auswertung();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const M = 12, PW = 210, CW = PW - 2 * M;
+  const fD = v => v ? v.split('-').reverse().join('.') : '';
+  const E = v => nf2.format(v) + ' EUR';
+  const RED = [238, 29, 37], INK = [36, 32, 33], GREY = [105, 102, 103];
+
+  // Kopf
+  try { doc.addImage(LOGO, 'PNG', PW - M - 16, M - 2, 16, 16); } catch (e) {}
+  doc.setFillColor(...INK); doc.rect(M, M, CW - 19, 8, 'F');
+  doc.setFillColor(...RED); doc.rect(M, M + 8, CW - 19, 1, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(255, 255, 255);
+  doc.text(`NACHKALKULATION  |  SWK ${STRUKTUR[S.sparte].name.toUpperCase()}`, M + 2.5, M + 5.5);
+  let y = M + 14;
+  const k = S.kopf;
+  const info = [
+    ['Auftragsnummer', k.aufnr, 'Ort / Straße', k.ort],
+    ['Monteur / Kolonne', k.monteur, 'Ausführung', [fD(k.von), fD(k.bis)].filter(Boolean).join(' – ')],
+    ['Interne Nr.', k.intern, 'Erstellt', new Date().toLocaleDateString('de-DE')],
+  ];
+  for (const [l1, v1, l2, v2] of info) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...GREY);
+    doc.text(l1.toUpperCase(), M, y); doc.text(l2.toUpperCase(), M + CW / 2, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(0, 0, 0);
+    doc.text(v1 || '—', M, y + 4); doc.text(v2 || '—', M + CW / 2, y + 4);
+    y += 9;
+  }
+
+  // Ergebnis-Kacheln
+  const { G } = A;
+  const bewertet = G.erl && (G.h || A.fremd);
+  const cls = !bewertet ? null : G.marge >= GRENZE_GRUEN ? 'ok' : G.marge >= 0 ? 'warn' : 'bad';
+  const farbe = { ok: [79, 121, 66], warn: [201, 133, 0], bad: [211, 47, 47] }[cls] || GREY;
+  const kacheln = [
+    ['Erlös laut Aufmaß', E(G.erl)],
+    ['Kosten', bewertet ? E(G.kost) : '–'],
+    ['Deckungsbeitrag', bewertet ? E(G.db) : '–'],
+    ['Marge', bewertet ? nf1.format(G.marge) + ' %' : '–'],
+    ['EUR je Stunde', G.eurh ? nf2.format(G.eurh) : '–'],
+  ];
+  const kw = CW / kacheln.length;
+  kacheln.forEach(([l, v], i) => {
+    const x = M + i * kw;
+    const hl = i === 3 && cls;
+    doc.setDrawColor(...(hl ? farbe : [210, 208, 208]));
+    doc.setFillColor(...(hl ? farbe : [250, 250, 250]));
+    doc.rect(x + 0.5, y, kw - 1, 14, hl ? 'FD' : 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...(hl ? [255, 255, 255] : GREY));
+    doc.text(l.toUpperCase(), x + 2.5, y + 4.5);
+    doc.setFontSize(11.5); doc.setTextColor(...(hl ? [255, 255, 255] : INK));
+    doc.text(v, x + 2.5, y + 11);
+  });
+  y += 17;
+  if (cls) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...farbe);
+    doc.text(`Bewertung: ${{ ok: 'Auskömmlich', warn: 'Knapp', bad: 'Verlust' }[cls]}  (grün ab ${GRENZE_GRUEN} % Marge, Verrechnungssatz ${nf2.format(A.satz)} EUR/h)`, M, y + 1);
+    y += 5;
+  }
+
+  // Positionen je Blatt
+  for (const sh of sheetsDerSparte()) {
+    const rows = A.z.filter(r => r.sheet === sh.key);
+    if (!rows.length) continue;
+    const body = [];
+    let letzte = null;
+    for (const r of rows) {
+      if (r.sec !== letzte) {
+        body.push([{ content: r.secTitle, colSpan: 6, styles: { fillColor: [241, 240, 240], fontStyle: 'bold', textColor: INK } }]);
+        letzte = r.sec;
+      }
+      body.push([r.nr, r.bez, r.eh, mengeTxt(r.menge, r.eh), epTxt(r.ep, r.eh), nf2.format(r.gp)]);
+    }
+    body.push([{ content: 'Summe Aufmaßblatt ' + sh.title, colSpan: 5, styles: { fontStyle: 'bold', halign: 'right' } },
+               { content: nf2.format(A[sh.key].erl), styles: { fontStyle: 'bold' } }]);
+    doc.autoTable({
+      startY: y + 3, margin: { left: M, right: M },
+      head: [[{ content: 'Aufmaßblatt ' + sh.title, colSpan: 6, styles: { fillColor: INK, textColor: 255, fontSize: 9 } }],
+             ['Pos.-Nr.', 'Bezeichnung', 'Einh.', 'Menge', 'EP', 'GP']],
+      body,
+      styles: { fontSize: 8, cellPadding: [1.3, 2, 1.3, 2], overflow: 'linebreak' },
+      headStyles: { fillColor: [228, 226, 226], textColor: INK, fontStyle: 'bold' },
+      columnStyles: { 0: { cellWidth: 24, fontSize: 7 }, 2: { cellWidth: 12, halign: 'center' }, 3: { cellWidth: 17, halign: 'right' },
+                      4: { cellWidth: 20, halign: 'right' }, 5: { cellWidth: 22, halign: 'right' } },
+    });
+    y = doc.lastAutoTable.finalY + 2;
+  }
+
+  // Stunden & Ergebnis
+  const cols = A.hatM ? [['Tiefbau', A.T], ['Montage', A.M], ['Gesamt', A.G]] : [['Gesamt', A.G]];
+  const f = (o, g) => g(o);
+  const erg = [
+    ['Erlös', o => E(o.erl)],
+    ['Stunden (Ist)', o => o.h ? nf2.format(o.h) + ' h' : '–'],
+    ['Stunden (Soll = Erlös ÷ Satz)', o => o.erl && o.soll !== null ? nf1.format(o.soll) + ' h' : '–'],
+    ['Kosten (Stunden × ' + nf2.format(A.satz) + ' EUR/h' + (A.fremd ? ' + sonst. Kosten' : '') + ')', o => E(o.kost)],
+    ['Deckungsbeitrag', o => E(o.db)],
+    ['Marge', o => o.marge === null ? '–' : nf1.format(o.marge) + ' %'],
+    ['EUR je Stunde (erzielt)', o => o.eurh ? nf2.format(o.eurh) : '–'],
+  ].map(([l, g]) => [l, ...cols.map(([, o]) => f(o, g))]);
+  doc.autoTable({
+    startY: y + 4, margin: { left: M, right: M },
+    head: [['Stundennachweis & Ergebnis', ...cols.map(c => c[0])]],
+    body: erg,
+    styles: { fontSize: 8.5, cellPadding: [1.5, 2, 1.5, 2] },
+    headStyles: { fillColor: INK, textColor: 255 },
+    columnStyles: Object.fromEntries(cols.map((_, i) => [i + 1, { halign: 'right', cellWidth: 30 }])),
+    didParseCell: d => { if (d.section === 'body' && (d.row.index === 4 || d.row.index === 5)) d.cell.styles.fontStyle = 'bold'; },
+  });
+  y = doc.lastAutoTable.finalY + 6;
+  if (A.fremd) {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...GREY);
+    doc.text(`Sonstige Kosten (Material, Entsorgung, NU …): ${E(A.fremd)} – nur in „Gesamt“ enthalten.`, M, y); y += 5;
+  }
+  if (S.bem) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK);
+    if (y > 260) { doc.addPage(); y = M + 6; }
+    doc.text('Bemerkung', M, y);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(0, 0, 0);
+    const t = doc.splitTextToSize(S.bem, CW);
+    doc.text(t, M, y + 4.5); y += 5 + t.length * 3.8;
+  }
+  // Unterschrift
+  y += 12;
+  if (y > 280) { doc.addPage(); y = M + 20; }
+  doc.setDrawColor(80, 80, 80); doc.line(M, y, M + 75, y);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...GREY);
+  doc.text('Datum, Unterschrift (geprüft)', M, y + 3.5);
+
+  // Fußzeile
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7); doc.setTextColor(...GREY);
+    doc.text(`Roth GmbH Tiefbau · Nachkalkulation intern · THÜGA-LV 2026 · Seite ${i}/${n}`, M, 290);
+  }
+  doc.save(dateiname('pdf'));
+}
+
+/* ════════ Start ════════ */
+render();
+</script>
+</body>
+</html>

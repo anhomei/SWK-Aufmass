@@ -1,0 +1,1291 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aufmaß-Tool Koordiniert – Roth GmbH Tiefbau</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-red: #EE1D25;
+  --color-red-dark: #B3151B;
+  --color-red-light: #FDD9DA;
+  --color-ink: #242021;
+  --color-text: #3C3C3C;
+  --color-muted: #696667;
+  --color-surface: #F4F3F3;
+  --color-border: #E5E5E5;
+  --color-success: #2E7D32;
+  --color-error: #D32F2F;
+  --color-warning: #F57F17;
+  --font-display: 'Oswald', Arial, sans-serif;
+  --font-body: 'Inter', Arial, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); font-size: 12px; background: var(--color-surface); color: var(--color-text); }
+
+/* ─── Layout ─── */
+.container { max-width: 1120px; margin: 0 auto; padding: 14px; }
+
+/* ─── Header-Karte (nur Bildschirm) ─── */
+.header-card { background:#fff; border:2px solid var(--color-red); border-radius:6px; padding:14px 16px; margin-bottom:0; }
+.header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.header-top h1 { color: var(--color-ink); font-size:17px; font-family: var(--font-display); text-transform: uppercase; }
+.logo-box { border:2px solid var(--color-red); border-radius:4px; padding:4px 12px; text-align:center; font-weight:bold; font-size:13px; color: var(--color-ink); min-width:100px; font-family: var(--font-display); }
+.logo-box small { display:block; font-size:10px; font-weight:normal; color:#555; }
+.header-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.field-grp { display:flex; flex-direction:column; gap:3px; }
+.field-grp label { font-weight:bold; font-size:10.5px; color: var(--color-muted); text-transform:uppercase; letter-spacing:0.3px; }
+.field-grp input, .field-grp select { border:1px solid #aaa; border-radius:3px; padding:5px 8px; font-size:12px; width:100%; background:#fafafa; }
+.field-grp input:focus { outline:2px solid var(--color-red); background:#fff; }
+.fertig-label { color: var(--color-success) !important; }
+.fertig-input { border-color: var(--color-success) !important; background:#f0fff4 !important; }
+.zeitraum-row { display:flex; gap:6px; align-items:center; }
+.zeitraum-row input { flex:1; }
+.zeitraum-row span { font-size:11px; color: var(--color-muted); white-space:nowrap; }
+
+/* ─── Tabs ─── */
+.tabs { display:flex; gap:3px; margin-top:10px; }
+.tab-btn { padding:8px 22px; border:2px solid var(--color-red); border-bottom:none; border-radius:5px 5px 0 0; background: var(--color-surface); cursor:pointer; font-size:12.5px; font-weight:bold; color: var(--color-ink); transition:background .15s; user-select:none; font-family: var(--font-display); }
+.tab-btn:hover { background: var(--color-border); }
+.tab-btn.active { background: var(--color-red); color:#fff; }
+
+/* ─── Tab-Inhalt ─── */
+.tab-content { display:none; background:#fff; border:2px solid var(--color-red); border-radius:0 6px 6px 6px; padding:16px; }
+.tab-content.active { display:block; }
+.tab-title { color: var(--color-ink); font-size:15px; font-weight:bold; margin-bottom:8px; padding-bottom:5px; border-bottom:2px solid var(--color-red); font-family: var(--font-display); }
+
+/* ─── Druckkopf (nur im Druck sichtbar) ─── */
+.print-header { display:none; }
+
+/* ─── Abschnitts-Header ─── */
+.sec-hdr { padding:4px 10px; font-weight:bold; font-size:11px; margin:10px 0 3px 0; border-radius:3px; color:#fff; font-family: var(--font-display); }
+.sec-blue   { background: var(--color-ink); }
+.sec-teal   { background: #2E7D32; }
+.sec-orange { background: #E67E22; }
+.sec-green  { background: var(--color-success); }
+.sec-dark   { background: #424242; }
+
+/* ─── Positions-Tabelle ─── */
+.pos-tbl { width:100%; border-collapse:collapse; margin-bottom:2px; }
+.pos-tbl th { background:#dde6f0; font-size:10.5px; padding:4px 6px; border:1px solid #bbb; text-align:left; font-weight:bold; }
+.pos-tbl td { border:1px solid #ccc; padding:2px 4px; vertical-align:middle; }
+.pos-tbl tr:hover td { background:#f5f8fc; }
+.td-nr { font-size:10px; color:#444; width:116px; font-family:'Courier New',monospace; white-space:nowrap; }
+.td-bez { color: var(--color-ink); font-weight:bold; }
+.td-eh { text-align:center; width:44px; color:#555; font-size:11px; }
+.td-mg { width:74px; }
+
+.pos-tbl input[type=number] { width:100%; border:none; border-bottom:1px solid #999; font-size:12px; text-align:right; padding:2px 4px; background:#fffde7; }
+.pos-tbl input[type=text]   { width:100%; border:none; border-bottom:1px solid #ccc; font-size:11px; padding:2px 4px; background:transparent; }
+.pos-tbl input:focus { outline:2px solid var(--color-red); border-radius:2px; }
+
+/* ─── Sonstiges-Suche ─── */
+.s-wrap { position:relative; }
+.s-search { width:100%; border:none; border-bottom:1px solid #999; font-size:11px; padding:2px 4px; background:#f0fff0; }
+.s-search:focus { outline:2px solid var(--color-success); border-radius:2px; }
+.s-dropdown {
+  display:none; position:absolute; z-index:999; left:0; top:100%;
+  background:#fff; border:1px solid #999; border-radius:0 0 4px 4px;
+  box-shadow:0 4px 12px rgba(0,0,0,.18); max-height:220px; overflow-y:auto;
+  min-width:420px; font-size:11px;
+}
+.s-dropdown.open { display:block; }
+.s-option { padding:5px 8px; cursor:pointer; border-bottom:1px solid #eee; }
+.s-option:hover { background:#e8f4fd; }
+.s-option strong { color: var(--color-ink); }
+.s-option .s-nr  { font-family:monospace; font-size:10px; color:#555; margin-left:6px; }
+.s-option .s-me  { float:right; color:#888; font-size:10px; }
+.s-no-result { padding:6px 8px; color:#999; font-style:italic; }
+.s-eh-sel { width:100%; border:none; border-bottom:1px solid #999; font-size:11px; padding:2px; background:#f0fff0; }
+
+/* ─── Buttons ─── */
+.btn { padding:6px 14px; border:none; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold; }
+.btn-del   { background: var(--color-error); color:#fff; padding:2px 7px; font-size:11px; border-radius:3px; }
+.btn-add   { background: var(--color-success); color:#fff; margin-top:5px; }
+.btn-print { background: var(--color-ink); color:#fff; padding:9px 22px; font-size:13px; font-family: var(--font-display); }
+.btn-save  { background: var(--color-success); color:#fff; }
+.btn-load  { background: #E67E22; color:#fff; }
+.btn-reset { background: var(--color-muted); color:#fff; }
+
+/* ─── Unterschrift ─── */
+.sig-row { display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:20px; border-top:1px solid #ccc; padding-top:8px; }
+.sig-box { margin-top:32px; border-top:1px solid #333; padding-top:4px; font-size:10.5px; color:#555; text-align:center; }
+
+/* ─── Oberflächenzettel ─── */
+.ofl-tbl { width:100%; border-collapse:collapse; margin-bottom:8px; }
+.ofl-tbl td, .ofl-tbl th { border:1px solid #aaa; padding:5px 8px; vertical-align:top; }
+.ofl-lbl { font-weight:bold; background: var(--color-surface); width:230px; }
+.ofl-hdr     { background: var(--color-ink); color:#fff; font-weight:bold; padding:5px 8px; font-size:12px; font-family: var(--font-display); }
+.ofl-hdr-red { background: var(--color-red); color:#fff; font-weight:bold; padding:5px 8px; font-size:12px; font-family: var(--font-display); }
+.ofl-inp { border:none; border-bottom:1px solid #999; width:100%; font-size:12px; padding:2px 4px; background:#fffde7; }
+.ofl-inp:focus { outline:2px solid var(--color-red); }
+.cb-row { display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+.cb-item { display:flex; align-items:center; gap:5px; cursor:pointer; }
+.cb-item input[type=checkbox] { width:14px; height:14px; }
+.ja-nein { display:flex; gap:24px; }
+.ja-nein label { display:flex; align-items:center; gap:5px; cursor:pointer; }
+
+/* ─── Footer ─── */
+.footer { margin-top:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.save-hint { font-size:11px; color: var(--color-muted); margin-left:6px; }
+
+/* ═══════════════════════════════════════════════
+   DRUCKEN
+═══════════════════════════════════════════════ */
+@media print {
+  @page { size: A4 portrait; margin: 8mm; }
+
+  body { background:#fff; font-size: 9px; }
+  .container { max-width:100%; padding:0; }
+
+  /* Alles ausblenden was nicht gedruckt werden soll */
+  .no-print, .tabs, .header-card, .footer { display:none !important; }
+
+  /* Alle Tabs auf eigener Seite, sichtbar machen */
+  .tab-content { display:block !important; border:none; padding:4px 0; page-break-before:always; }
+  #tab-wt { page-break-before:auto; }
+
+  /* Druckkopf einblenden */
+  .print-header { display:block !important; border:1px solid #333; border-radius:3px; padding:5px 8px; margin-bottom:6px; font-size:9px; }
+  .print-header-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px 12px; }
+  .print-header-item label { font-weight:bold; color:#555; display:block; font-size:8px; text-transform:uppercase; }
+  .print-header-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; border-bottom:1px solid #ccc; padding-bottom:3px; }
+  .print-header-title strong { font-size:11px; color: var(--color-ink); }
+  .print-header-title span { font-size:9px; color:#555; }
+
+  /* Tabellen kompakt */
+  .pos-tbl th { font-size:8.5px; padding:2px 4px; background:#dde6f0 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .pos-tbl td { padding:1px 3px; font-size:9px; }
+  .td-nr { font-size:8px; width:90px; }
+  .td-bez { font-size:9px; }
+  .td-mg { width:50px; }
+  .td-eh { width:32px; }
+
+  /* Sec-Header */
+  .sec-hdr { font-size:9px; padding:2px 6px; margin:6px 0 2px 0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  /* Inputs transparent */
+  input, select, textarea { border:none !important; border-bottom:1px solid #aaa !important; background:transparent !important; font-size:9px; padding:0 2px !important; }
+  .s-eh-sel { font-size:8px; }
+
+  /* Sonstiges: Löschen-Button ausblenden */
+  .btn-del, .btn-add { display:none !important; }
+
+  /* Leere Zeilen ausblenden */
+  .hide-print { display:none !important; }
+
+  /* Dropdown verstecken */
+  .s-dropdown { display:none !important; }
+
+  /* Unterschrift */
+  .sig-row { margin-top:10px; }
+  .sig-box { margin-top:20px; }
+
+  /* OFL */
+  .ofl-tbl td { padding:3px 5px; font-size:9px; }
+  .ofl-lbl { width:160px; }
+  .ofl-hdr, .ofl-hdr-red { font-size:10px; padding:3px 6px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  /* Tab-Titel */
+  .tab-title { font-size:12px; margin-bottom:4px; padding-bottom:3px; }
+
+  /* Farbige Abschnittsköpfe: Hintergrund entfernen, nur Textlinie */
+  .sec-hdr { background:#fff !important; color:#000 !important; border-bottom:1px solid #666 !important; border-radius:0 !important; }
+  .ofl-hdr, .ofl-hdr-red { background:#fff !important; color:#000 !important; border-bottom:1px solid #666 !important; }
+  .ofl-lbl { background:#fff !important; }
+  .pos-tbl th { background:#fff !important; color:#000 !important; }
+
+  /* Eingabefeld-Hintergründe vollständig unterdrücken */
+  .pos-tbl input[type=number], .s-search, .s-eh-sel, .ofl-inp { background:transparent !important; }
+
+  /* Platzhaltertexte ausblenden */
+  ::placeholder { color:transparent !important; opacity:0 !important; }
+}
+
+/* ─── PDF-Generierungsmodus ─── */
+.pdf-show { display:block !important; }
+.pdf-hide { display:none !important; }
+body.pdf-gen .sec-hdr { background:#fff !important; color:#000 !important; border-bottom:1px solid #666 !important; border-radius:0 !important; }
+body.pdf-gen .ofl-hdr, body.pdf-gen .ofl-hdr-red { background:#fff !important; color:#000 !important; border-bottom:1px solid #666 !important; }
+body.pdf-gen .ofl-lbl { background:#fff !important; }
+body.pdf-gen .pos-tbl th { background:#fff !important; color:#000 !important; }
+body.pdf-gen input, body.pdf-gen select, body.pdf-gen textarea { background:transparent !important; border:none !important; border-bottom:1px solid #aaa !important; font-size:9px !important; padding:0 2px !important; }
+body.pdf-gen .print-header { display:block !important; border:1px solid #333; border-radius:3px; padding:5px 8px; margin-bottom:6px; font-size:9px; }
+body.pdf-gen .print-header-grid { display:grid !important; grid-template-columns:repeat(3,1fr); gap:4px 12px; }
+body.pdf-gen .print-header-item label { font-weight:bold; color:#555; display:block; font-size:8px; text-transform:uppercase; }
+body.pdf-gen .print-header-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; border-bottom:1px solid #ccc; padding-bottom:3px; }
+body.pdf-gen .print-header-title strong { font-size:11px; color:#1a3a6b; }
+body.pdf-gen .hide-print { display:none !important; }
+body.pdf-gen .btn-del, body.pdf-gen .btn-add { display:none !important; }
+body.pdf-gen .s-dropdown { display:none !important; }
+body.pdf-gen ::placeholder { color:transparent !important; opacity:0 !important; }
+body.pdf-gen .tab-content { border:none !important; padding:4px 0 !important; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+<div class="container">
+<div class="no-print" style="margin:0 0 8px 0;font-size:13px;"><a href="./" style="color:var(--color-ink, #242021);text-decoration:none;font-weight:600;">&larr; Zur Auswahl (Wasser / Gas / Strom / Koordiniert)</a></div>
+
+<!-- ════════ GEMEINSAMER KOPF (nur Bildschirm) ════════ -->
+<div class="header-card no-print">
+  <div class="header-top">
+    <h1>Aufmaß-Tool — Roth GmbH Tiefbau (Koordiniert / SWK)</h1>
+    <div class="logo-box"><img src="" class="print-logo" style="height:52px;width:auto;" alt="Roth GmbH"></div>
+  </div>
+  <div class="header-grid">
+    <div class="field-grp">
+      <label>Auftragsnummer / -text</label>
+      <input type="text" id="g-aufnr" placeholder="z. B. 2026-SWK-0123" oninput="syncAll()">
+    </div>
+    <div class="field-grp">
+      <label>Ausführungszeitraum — Von</label>
+      <input type="date" id="g-von" oninput="syncAll()">
+    </div>
+    <div class="field-grp">
+      <label>Ausführungszeitraum — Bis</label>
+      <input type="date" id="g-bis" oninput="document.getElementById('g-fertig').value=this.value; syncAll()">
+    </div>
+    <input type="hidden" id="g-fertig">
+    <div class="field-grp">
+      <label>Ort</label>
+      <input type="text" id="g-ort" placeholder="Kaiserslautern" oninput="syncAll()">
+    </div>
+    <div class="field-grp">
+      <label>Straße / Hausnummer</label>
+      <input type="text" id="g-strasse" placeholder="Musterstraße 1" oninput="syncAll()">
+    </div>
+    <div class="field-grp">
+      <label>Baumaßnahme (Bezeichnung)</label>
+      <input type="text" id="g-baum" placeholder="z. B. NA-Erneuerung" oninput="syncAll()">
+    </div>
+    <div class="field-grp">
+      <label>Sparte / Interne Nr.</label>
+      <input type="text" id="g-sparte" placeholder="z. B. SWK-Koord / 2026-0123" oninput="syncAll()">
+    </div>
+    <div class="field-grp">
+      <label>Aufmaßblatt — Umfang</label>
+      <select id="g-mode" onchange="setAufmassMode()" style="width:100%;padding:5px 4px;border:1px solid #aaa;border-radius:3px;font-size:12px;background:#fff;cursor:pointer;">
+        <option value="both">Tiefbau + Montage</option>
+        <option value="wt">Nur Tiefbau (koordiniert)</option>
+        <option value="wm">Nur Montage</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ TABS (nur Bildschirm) ════════ -->
+<div class="tabs no-print">
+  <div class="tab-btn active" onclick="showTab('wt',this)">Aufmaßblatt Koord. T (Tiefbau E/G/W)</div>
+  <div class="tab-btn" onclick="showTab('wm',this)">Aufmaßblatt Koord. M (Montage G/W)</div>
+  <div class="tab-btn" onclick="showTab('ofl',this)">Oberflächenzettel SWK</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 1: W T — TIEFBAU
+══════════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-wt">
+
+  <!-- Druckkopf WT -->
+  <div class="print-header">
+    <div class="print-header-title">
+      <div><strong>Aufmaßblatt Koord. T — Tiefbau E/G/W &nbsp;|&nbsp; Roth GmbH Tiefbau Kaiserslautern</strong><br>
+      <span style="font-size:8px;color:#555;"><span id="ph-wt-sparte"></span></span></div>
+      <img src="" class="print-logo" style="height:28px;width:auto;" alt="Roth GmbH">
+    </div>
+    <div class="print-header-grid">
+      <div class="print-header-item"><label>Auftragsnummer / -text</label><span id="ph-wt-aufnr"></span></div>
+      <div class="print-header-item"><label>Ausführungszeitraum</label><span id="ph-wt-zeitraum"></span></div>
+      <div class="print-header-item"><label>Fertigstellung</label><span id="ph-wt-fertig"></span></div>
+      <div class="print-header-item"><label>Ort</label><span id="ph-wt-ort"></span></div>
+      <div class="print-header-item"><label>Strasse / Nr.</label><span id="ph-wt-strasse"></span></div>
+      <div class="print-header-item"><label>Baumaßnahme</label><span id="ph-wt-baum"></span></div>
+    </div>
+  </div>
+
+  <div class="tab-title no-print">Aufmaßblatt Koord. T — Tiefbau E/G/W</div>
+
+  <div class="sec-hdr sec-dark">Gebühr</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">90000001500</td><td class="td-bez">Gebühr VRAO inkl. Skontoaufschlag</td><td class="td-eh">EUR</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-blue">Koordinierter Hausanschluss — Strom (E T)</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50017200100</td><td class="td-bez">E T Koord NA-Leitung bef Ofl</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017200200</td><td class="td-bez">E T Koord NA-Leitung unbef Ofl</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017200500</td><td class="td-bez">E T Koord NA-GP Einzel-NA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017200600</td><td class="td-bez">E T Koord NA-GP Erricht TeilNA unbef Ofl</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017200640</td><td class="td-bez">E T Koord NA-GP Erricht TeilNA bef Ofl</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017200660</td><td class="td-bez">E T Koord NA-GP Fertigst TeilNA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-blue">Koordinierter Hausanschluss — Gas (G T)</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50017200700</td><td class="td-bez">G T Koord NA-Leitung bef Ofl</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017200800</td><td class="td-bez">G T Koord NA-Leitung unbef Ofl</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201100</td><td class="td-bez">G T Koord NA-GP Einzel-NA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201200</td><td class="td-bez">G T Koord NA-GP Erricht TeilNA unbef Ofl</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201240</td><td class="td-bez">G T Koord NA-GP Erricht TeilNA bef Ofl</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201260</td><td class="td-bez">G T Koord NA-GP Fertigst TeilNA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-blue">Koordinierter Hausanschluss — Wasser (W T)</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50017201300</td><td class="td-bez">W T Koord NA-Leitung bef Ofl</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201400</td><td class="td-bez">W T Koord NA-Leitung unbef Ofl</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201700</td><td class="td-bez">W T Koord NA-GP Einzel-NA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201800</td><td class="td-bez">W T Koord NA-GP Erricht TeilNA unbef Ofl</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201840</td><td class="td-bez">W T Koord NA-GP Erricht TeilNA bef Ofl</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201860</td><td class="td-bez">W T Koord NA-GP Fertigst TeilNA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-dark">Spartenübergreifende Zulagen / Abzüge</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50017102800</td><td class="td-bez">E/G/W T Koord Zul Mehrtiefe je10cm</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50017201900</td><td class="td-bez">E/G/W T Koord Zul NA HoB7 je10cm</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006011220</td><td class="td-bez">E T Koord Abz Ofl ohne Decksch</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006011230</td><td class="td-bez">G T Koord Abz Ofl ohne Decksch</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006011240</td><td class="td-bez">W T Koord Abz Ofl ohne Decksch</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006010100</td><td class="td-bez">G T Koord. HA-GP, Bauabschnitt</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006010200</td><td class="td-bez">W T Koord. HA-GP, Bauabschnitt</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006011070</td><td class="td-bez">T Suchschlitze</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006011010</td><td class="td-bez">E T HA-GP Kopfloch irregulärer HA-Proz.</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006011020</td><td class="td-bez">G T HA-GP Kopfloch irregulärer HA-Proz.</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006011030</td><td class="td-bez">W T HA-GP Kopfloch irregulärer HA-Proz.</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-dark">Hauseinführung / Inneninstallation Tiefbau</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50011600100</td><td class="td-bez">E T Mauerdurchbruch innen</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012600100</td><td class="td-bez">G T Mauerdurchbruch innen</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013600100</td><td class="td-bez">W T Mauerdurchbruch innen</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50011201100</td><td class="td-bez">E T Zul NA Wandst&gt;50cm je10cm</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012202000</td><td class="td-bez">G T Zul NA Wandst&gt;50cm je10cm</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013202100</td><td class="td-bez">W T Zul NA Wandst&gt;50cm je 10cm</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">90000000420</td><td class="td-bez">E/G/W/F T Zulage bei Einbau MSHE</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">90000000440</td><td class="td-bez">E/G/W/F Wanddurchführung MSH (Trockeneinbau)</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-teal">Zusatzpositionen Spartenübergreifend</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">90000000110</td><td class="td-bez">E/G/W/F T Asphalt/Beton je 14cm inkl Entsorg</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">99006011040</td><td class="td-bez">E/G/W/F T Ofl. Einbau prov. Asphaltdecke je 5 cm</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">90000004300</td><td class="td-bez">G/W/F T Ausbau von Straßenkappen</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">90000004400</td><td class="td-bez">G/W/F T Regulierung von Straßenkappe</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-orange">Sonstiges — Positionen aus THÜGA LV 2026 (742 Positionen durchsuchbar)</div>
+  <table class="pos-tbl" id="tbl-s-wt"><thead><tr>
+    <th style="width:116px">Pos.-Nr. / Suche</th><th>Bezeichnung</th>
+    <th style="width:50px">Einh.</th><th style="width:74px">Menge</th>
+    <th>Erläuterung</th><th class="no-print" style="width:36px"></th>
+  </tr></thead><tbody id="s-wt"></tbody></table>
+  <div class="no-print">
+    <button class="btn btn-add" onclick="addRow('s-wt')">+ Position hinzufügen</button>
+  </div>
+
+  <div class="sec-hdr sec-green">Preisblatt T — Tiefbau und Oberflächen</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50031004200</td><td class="td-bez">K T Beton C 8/10</td><td class="td-eh">M³</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031004300</td><td class="td-bez">K T Beton C 20/25 mit Schalung/Bew</td><td class="td-eh">M³</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031004400</td><td class="td-bez">K T Beton-/Verbundpflaster</td><td class="td-eh">M²</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031004500</td><td class="td-bez">K T Plattenbelag/Rasengittersteine</td><td class="td-eh">M²</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031004600</td><td class="td-bez">K T Rasenkantensteine</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031004700</td><td class="td-bez">K T Bordsteine</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031004800</td><td class="td-bez">K T Mutterboden</td><td class="td-eh">M³</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031004900</td><td class="td-bez">K T Riesel/Schotter/Splitt</td><td class="td-eh">M³</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031005000</td><td class="td-bez">K T Sand</td><td class="td-eh">M³</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">90000001000</td><td class="td-bez">Sonderleistungen inkl. Skontoaufschlag</td><td class="td-eh">EUR</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sig-row">
+    <div><div class="sig-box"><span class="sig-date-an"></span>, Unterschrift AN</div></div>
+    <div><div class="sig-box">Datum, Unterschrift AG</div></div>
+  </div>
+</div><!-- /tab-wt -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 2: W M — MONTAGE
+══════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-wm">
+
+  <!-- Druckkopf WM -->
+  <div class="print-header">
+    <div class="print-header-title">
+      <div><strong>Aufmaßblatt Koord. M — Montage G/W &nbsp;|&nbsp; Roth GmbH Tiefbau Kaiserslautern</strong><br>
+      <span style="font-size:8px;color:#555;"><span id="ph-wm-sparte"></span></span></div>
+      <img src="" class="print-logo" style="height:28px;width:auto;" alt="Roth GmbH">
+    </div>
+    <div class="print-header-grid">
+      <div class="print-header-item"><label>Auftragsnummer / -text</label><span id="ph-wm-aufnr"></span></div>
+      <div class="print-header-item"><label>Ausführungszeitraum</label><span id="ph-wm-zeitraum"></span></div>
+      <div class="print-header-item"><label>Fertigstellung</label><span id="ph-wm-fertig"></span></div>
+      <div class="print-header-item"><label>Ort</label><span id="ph-wm-ort"></span></div>
+      <div class="print-header-item"><label>Strasse / Nr.</label><span id="ph-wm-strasse"></span></div>
+      <div class="print-header-item"><label>Baumaßnahme</label><span id="ph-wm-baum"></span></div>
+    </div>
+  </div>
+
+  <div class="tab-title no-print">Aufmaßblatt Koord. M — Montage G/W</div>
+
+  <div class="sec-hdr sec-blue">Gas — Neuanschluss Montage (G M)</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50012202200</td><td class="td-bez">G M NA-Leitung verl+mont</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012202350</td><td class="td-bez">G M NA-GP Einzel-NA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012202360</td><td class="td-bez">G M Zul NA-GP Erneuerung</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012202770</td><td class="td-bez">G M Zul NA-GP Matwechs PE-Stahl</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012202550</td><td class="td-bez">G M NA-GP Erricht TeilNA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012202650</td><td class="td-bez">G M NA-GP Fertigst TeilNA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012202750</td><td class="td-bez">G M NA-GP Umbindung</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012202760</td><td class="td-bez">G M NA-GP Netzanschluss trennen</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-dark">Gas — Inneninstallation Montage</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50012600200</td><td class="td-bez">G M Inneninstallation verl+mont</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012600250</td><td class="td-bez">G M GP Inbetriebnahme</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012600300</td><td class="td-bez">G M Zul Inbetriebn je weiteres Gerät</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50012600400</td><td class="td-bez">G M Gebrauchsfähigkeitsprüfung</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-blue">Wasser — Neuanschluss Montage (W M)</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50013202300</td><td class="td-bez">W M NA-Leitung verl+mont</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013202450</td><td class="td-bez">W M NA-GP Einzel-NA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013202475</td><td class="td-bez">W M Zul NA-GP Erneuerung</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013202650</td><td class="td-bez">W M NA-GP Erricht TeilNA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013202750</td><td class="td-bez">W M NA-GP Fertigst TeilNA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013202850</td><td class="td-bez">W M NA-GP Umbindung</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013202860</td><td class="td-bez">W M NA-GP Netzanschluss trennen</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-dark">Wasser — Inneninstallation Montage</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50013600200</td><td class="td-bez">W M Inneninstallation verl+mont</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50013600250</td><td class="td-bez">W M GP Inbetriebnahme</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-orange">Sonstiges — Positionen aus THÜGA LV 2026 (742 Positionen durchsuchbar)</div>
+  <table class="pos-tbl" id="tbl-s-wm"><thead><tr>
+    <th style="width:116px">Pos.-Nr. / Suche</th><th>Bezeichnung</th>
+    <th style="width:50px">Einh.</th><th style="width:74px">Menge</th>
+    <th>Erläuterung</th><th class="no-print" style="width:36px"></th>
+  </tr></thead><tbody id="s-wm"></tbody></table>
+  <div class="no-print">
+    <button class="btn btn-add" onclick="addRow('s-wm')">+ Position hinzufügen</button>
+  </div>
+
+  <div class="sec-hdr sec-teal">Verlegung von Neuanschlüssen Rohranlagen</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50021200500</td><td class="td-bez">B R NA-Mikrorohr einbringen</td><td class="td-eh">M</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50021200550</td><td class="td-bez">B R NA-GP Fertigst TeilNA</td><td class="td-eh">ST</td><td class="td-mg"><input type="number" step="1" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sec-hdr sec-green">Preisblatt T — Tiefbau und Oberflächen</div>
+  <table class="pos-tbl"><thead><tr>
+    <th style="width:116px">Pos.-Nr.</th><th>Bezeichnung</th>
+    <th style="width:44px">Einh.</th><th style="width:74px">Menge</th><th>Erläuterung</th>
+  </tr></thead><tbody>
+    <tr><td class="td-nr">50037002410</td><td class="td-bez">K WG PE Monteur inkl Ausrüstung</td><td class="td-eh">H</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">50031005800</td><td class="td-bez">K T Transporter</td><td class="td-eh">H</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+    <tr><td class="td-nr">90000001000</td><td class="td-bez">Sonderleistungen inkl. Skontoaufschlag</td><td class="td-eh">EUR</td><td class="td-mg"><input type="number" step="0.01" min="0"></td><td><input type="text"></td></tr>
+  </tbody></table>
+
+  <div class="sig-row">
+    <div><div class="sig-box"><span class="sig-date-an"></span>, Unterschrift AN</div></div>
+    <div><div class="sig-box">Datum, Unterschrift AG</div></div>
+  </div>
+</div><!-- /tab-wm -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 3: OBERFLÄCHENZETTEL SWK (FB KT507)
+══════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-ofl">
+
+  <!-- Druckkopf OFL -->
+  <div class="print-header">
+    <div class="print-header-title">
+      <strong>Oberflächenwiederherstellung (Abnahme Kleinbaustellen) &nbsp;|&nbsp; Roth GmbH</strong>
+      <span>Dokument FB KT507 | Rev. 00 | INTERN</span>
+    </div>
+    <div class="print-header-grid">
+      <div class="print-header-item"><label>Auftragsnummer / -text</label><span id="ph-ofl-aufnr"></span></div>
+      <div class="print-header-item"><label>Fertigstellung</label><span id="ph-ofl-fertig"></span></div>
+      <div class="print-header-item"><label>Baumaßnahme</label><span id="ph-ofl-baum"></span></div>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;" class="no-print">
+    <div>
+      <div style="font-size:10px; color:#777;">Dokument FB KT507 | Revision 00 | Klassifizierung: INTERN</div>
+      <div class="tab-title" style="margin-bottom:0; border:none;">Oberflächenwiederherstellung (Abnahme Kleinbaustellen)</div>
+    </div>
+    <div style="border:2px solid #1a3a6b; border-radius:4px; padding:5px 12px; text-align:center; font-size:12px;">
+      <strong style="color:#1a3a6b;">SWK</strong><br><span style="font-size:10px; color:#555;">Stadtwerke Kaiserslautern</span>
+    </div>
+  </div>
+
+  <table class="ofl-tbl"><tbody>
+    <tr><td colspan="2" class="ofl-hdr">Objekt / Baumaßnahme</td></tr>
+    <tr>
+      <td class="ofl-lbl">Sparte:</td>
+      <td><div class="cb-row">
+        <label class="cb-item"><input type="checkbox"> Fernwärme</label>
+        <label class="cb-item"><input type="checkbox"> Gas</label>
+        <label class="cb-item"><input type="checkbox"> Kommunikation</label>
+        <label class="cb-item"><input type="checkbox"> Strom</label>
+        <label class="cb-item"><input type="checkbox"> Wasser</label>
+      </div></td>
+    </tr>
+    <tr><td class="ofl-lbl">Baumaßnahme:</td><td><input class="ofl-inp" type="text" id="ofl-baum"></td></tr>
+    <tr><td class="ofl-lbl">Auftragsnummer(n):</td><td><input class="ofl-inp" type="text" id="ofl-aufnr"></td></tr>
+    <tr>
+      <td class="ofl-lbl">Ort / Straße:</td>
+      <td><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div><div style="font-size:10px; color:#888; margin-bottom:2px;">Ort</div><input class="ofl-inp" type="text" id="ofl-ort"></div>
+        <div><div style="font-size:10px; color:#888; margin-bottom:2px;">Straße / Nr.</div><input class="ofl-inp" type="text" id="ofl-strasse"></div>
+      </div></td>
+    </tr>
+
+    <tr><td colspan="2" class="ofl-hdr">Befestigung</td></tr>
+    <tr>
+      <th class="ofl-lbl" style="background:#dde6f0;">Befestigungsart</th>
+      <th style="background:#dde6f0;"><div style="display:grid; grid-template-columns:130px 1fr; gap:10px;"><span>Fläche / Länge</span><span>Art der Befestigung</span></div></th>
+    </tr>
+    <tr><td class="ofl-lbl">Straßenoberfläche [m²]</td><td><div style="display:grid; grid-template-columns:130px 1fr; gap:10px;"><input class="ofl-inp" type="number" step="0.01" min="0"><input class="ofl-inp" type="text" placeholder="z. B. Asphalt"></div></td></tr>
+    <tr><td class="ofl-lbl">Straßenrinne [m]</td><td><div style="display:grid; grid-template-columns:130px 1fr; gap:10px;"><input class="ofl-inp" type="number" step="0.01" min="0"><input class="ofl-inp" type="text"></div></td></tr>
+    <tr><td class="ofl-lbl">Bordsteine [m]</td><td><div style="display:grid; grid-template-columns:130px 1fr; gap:10px;"><input class="ofl-inp" type="number" step="0.01" min="0"><input class="ofl-inp" type="text"></div></td></tr>
+    <tr><td class="ofl-lbl">Gehwegbefestigung [m²]</td><td><div style="display:grid; grid-template-columns:130px 1fr; gap:10px;"><input class="ofl-inp" type="number" step="0.01" min="0"><input class="ofl-inp" type="text" placeholder="z. B. Verbundpflaster"></div></td></tr>
+    <tr><td class="ofl-lbl">Privatgrundstück [m²]</td><td><div style="display:grid; grid-template-columns:130px 1fr; gap:10px;"><input class="ofl-inp" type="number" step="0.01" min="0"><input class="ofl-inp" type="text"></div></td></tr>
+    <tr><td class="ofl-lbl">Sonstiges</td><td><div style="display:grid; grid-template-columns:130px 1fr; gap:10px;"><input class="ofl-inp" type="text" placeholder="Maß"><input class="ofl-inp" type="text" placeholder="Beschreibung"></div></td></tr>
+
+    <tr><td colspan="2" class="ofl-hdr">Fertigmeldung durch Auftragnehmer</td></tr>
+    <tr><td class="ofl-lbl">Firma:</td><td><strong>Roth GmbH</strong></td></tr>
+    <tr>
+      <td class="ofl-lbl">Datum der Fertigstellung:</td>
+      <td><input class="ofl-inp" type="text" id="ofl-datum" style="font-weight:bold; color:#006633; font-size:13px;" placeholder="wird aus Kopf übernommen"></td>
+    </tr>
+    <tr><td class="ofl-lbl">Verantwortlicher des AN:</td><td><input class="ofl-inp" type="text" placeholder="Name / Funktion"></td></tr>
+
+    <tr><td colspan="2" class="ofl-hdr">Abnahme durch SWK</td></tr>
+    <tr><td class="ofl-lbl">Baufeld geräumt — Absperrungen:</td><td><div class="ja-nein"><label><input type="radio" name="ab1"> ja</label><label><input type="radio" name="ab1"> nein</label></div></td></tr>
+    <tr><td class="ofl-lbl">Baufeld geräumt — Verkehrsschilder:</td><td><div class="ja-nein"><label><input type="radio" name="ab2"> ja</label><label><input type="radio" name="ab2"> nein</label></div></td></tr>
+    <tr><td class="ofl-lbl">Baufeld geräumt — Aushub:</td><td><div class="ja-nein"><label><input type="radio" name="ab3"> ja</label><label><input type="radio" name="ab3"> nein</label></div></td></tr>
+    <tr><td class="ofl-lbl">Bei Asphalt: Fugenverguss / TOK-Band:</td><td><div class="ja-nein"><label><input type="radio" name="ab4"> ja</label><label><input type="radio" name="ab4"> nein</label></div></td></tr>
+    <tr>
+      <td class="ofl-lbl">Festgestellt wurden:</td>
+      <td>
+        <div style="display:flex; gap:20px; margin-bottom:6px;">
+          <label class="cb-item"><input type="checkbox" id="cb-km" onchange="xorCb('cb-km','cb-fm')"> keine Mängel</label>
+          <label class="cb-item"><input type="checkbox" id="cb-fm" onchange="xorCb('cb-fm','cb-km')"> folgende Mängel / laut Anlage(n):</label>
+        </div>
+        <textarea class="ofl-inp" rows="3" style="width:100%; border:1px solid #aaa; border-radius:3px; padding:4px; resize:vertical;" placeholder="Mängelbeschreibung …"></textarea>
+      </td>
+    </tr>
+    <tr><td class="ofl-lbl">Mängel zu beseitigen bis:</td><td><input class="ofl-inp" type="date" style="max-width:200px;"></td></tr>
+    <tr>
+      <td class="ofl-lbl">Baubeauftragter SWK:</td>
+      <td><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input class="ofl-inp" type="text" placeholder="Name"><input class="ofl-inp" type="text" placeholder="Datum / Unterschrift"></div></td>
+    </tr>
+
+    <tr><td colspan="2" class="ofl-hdr-red">Bei Mängel</td></tr>
+    <tr><td class="ofl-lbl">Mängel fristgerecht beseitigt:</td><td><div class="ja-nein"><label><input type="radio" name="mn1"> ja</label><label><input type="radio" name="mn1"> nein</label></div></td></tr>
+    <tr><td class="ofl-lbl">Bemerkungen:</td><td><textarea class="ofl-inp" rows="3" style="width:100%; border:1px solid #aaa; border-radius:3px; padding:4px; resize:vertical;"></textarea></td></tr>
+    <tr>
+      <td class="ofl-lbl">Baubeauftragter SWK:</td>
+      <td><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input class="ofl-inp" type="text" placeholder="Name"><input class="ofl-inp" type="text" placeholder="Datum / Unterschrift"></div></td>
+    </tr>
+  </tbody></table>
+</div><!-- /tab-ofl -->
+
+
+<!-- ════════ AKTIONEN (nur Bildschirm) ════════ -->
+<div class="footer no-print">
+  <button class="btn btn-pdf" onclick="generatePDF()">&#128438; PDF generieren</button>
+  <button class="btn btn-save"  onclick="saveData()">&#128190; Speichern</button>
+  <button class="btn btn-load"  onclick="loadData()">&#128193; Laden</button>
+  <button class="btn btn-reset" onclick="clearAll()">&#128465; Zurücksetzen</button>
+  <span class="save-hint">Speichern: JSON-Datei in beliebigem Ordner ablegen (z. B. Projektordner auf S:)</span>
+</div>
+
+</div><!-- /container -->
+
+<script>
+/* ════════ THÜGA LV 2026 — 742 Positionen ════════ */
+const TUEGA = [{"nr":"90000001000","bez":"Sonderleistungen inkl. Skontoaufschlag","me":"EUR"},{"nr":"90000001500","bez":"Gebühr VRAO inkl. Skontoaufschlag","me":"EUR"},{"nr":"50017100100","bez":"E T Koord Ofl Unbefestigt","me":"m"},{"nr":"50017100200","bez":"E T Koord Ofl ohne","me":"m"},{"nr":"50017100300","bez":"E T Koord Ofl Wassergebunden","me":"m"},{"nr":"50017100400","bez":"E T Koord Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50017100500","bez":"E T Koord Ofl Asph/Beton>14cm","me":"m"},{"nr":"50017100600","bez":"E T Koord Ofl Platten/Verbund-Pfl","me":"m"},{"nr":"50017100700","bez":"E T Koord Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50017100800","bez":"E T Koord Ofl Mosaikpflaster","me":"m"},{"nr":"50017100900","bez":"G T Koord Ofl Unbefestigt","me":"m"},{"nr":"50017101000","bez":"G T Koord Ofl ohne","me":"m"},{"nr":"50017101100","bez":"G T Koord Ofl Wassergebunden","me":"m"},{"nr":"50017101200","bez":"G T Koord Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50017101300","bez":"G T Koord Ofl Asph/Beton>14cm","me":"m"},{"nr":"50017101400","bez":"G T Koord Ofl Platten/Verbund-Pfl","me":"m"},{"nr":"50017101500","bez":"G T Koord Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50017101600","bez":"G T Koord Ofl Mosaikpflaster","me":"m"},{"nr":"50017101700","bez":"W T Koord Ofl Unbefestigt","me":"m"},{"nr":"50017101800","bez":"W T Koord Ofl ohne","me":"m"},{"nr":"50017101900","bez":"W T Koord Ofl Wassergebunden","me":"m"},{"nr":"50017102000","bez":"W T Koord Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50017102100","bez":"W T Koord Ofl Asph/Beton>14cm","me":"m"},{"nr":"50017102200","bez":"W T Koord Oberfl Platten/Verbund-Pfl.","me":"m"},{"nr":"50017102300","bez":"W T Koord Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50017102400","bez":"W T Koord Ofl Mosaikpflaster","me":"m"},{"nr":"50017102550","bez":"G/W T Zul Koord Einb","me":"St"},{"nr":"50017102600","bez":"E/G/W T Koord Zul HoB 7 je10cm","me":"m"},{"nr":"50017102700","bez":"E/G/W T Koord Zul Ofl Asph/Beton>22cm","me":"m"},{"nr":"50017102800","bez":"E/G/W T Koord Zul Mehrtiefe je10cm","me":"m"},{"nr":"50017102610","bez":"E/G/W T Zul HoB 7 je 10cm","me":"m"},{"nr":"50017102900","bez":"G/W/FW T Zul tragl Druckrohrltg","me":"m"},{"nr":"50017103000","bez":"E/G/W/FW/BBK Zul Mehrlänge Bord/Rinne","me":"m"},{"nr":"50017103100","bez":"E/G/W T Zul Aushub bis HoB6 oBodtausch","me":"m³"},{"nr":"50017103200","bez":"E/G/W T Zul Aushub bis HoB6 mBodtausch","me":"m³"},{"nr":"50017103300","bez":"E/G/W T Zul Aushub HoB7","me":"m³"},{"nr":"50017103400","bez":"E/G/W O Zul Ofl unbef","me":"m²"},{"nr":"50017103500","bez":"E/G/W O Zul Ofl Wassergebunden","me":"m²"},{"nr":"50017103600","bez":"E/G/W O Zul Ofl Asph/Bet=<14cm","me":"m²"},{"nr":"50017103700","bez":"E/G/W O Zul Ofl Asph/Bet>14cm","me":"m²"},{"nr":"50017103800","bez":"E/G/W O Zul Ofl Asph/Bet>22cm je10cm","me":"m²"},{"nr":"50017103900","bez":"E/G/W O Zul Ofl Platten/Verbund-Pfl","me":"m²"},{"nr":"50017104000","bez":"E/G/W O Zul Ofl Groß/Kleinpflaster","me":"m²"},{"nr":"50017104100","bez":"E/G/W O Zul Ofl Mosaikpflaster","me":"m²"},{"nr":"50017104200","bez":"T Dep Abz Entsorg AG","me":"t"},{"nr":"50017200100","bez":"E T Koord NA-Leitung bef Ofl","me":"m"},{"nr":"50017200200","bez":"E T Koord NA-Leitung unbef Ofl","me":"m"},{"nr":"50017200300","bez":"E T Koord NA-GP unbef Ofl","me":"St"},{"nr":"50017200400","bez":"E T Koord NA-GP im Zuge der Hauptltg","me":"St"},{"nr":"50017200500","bez":"E T Koord NA-GP Einzel-NA","me":"St"},{"nr":"50017200600","bez":"E T Koord NA-GP Erricht TeilNA unbef Ofl","me":"St"},{"nr":"50017200640","bez":"E T Koord NA-GP Erricht TeilNA bef Ofl","me":"St"},{"nr":"50017200660","bez":"E T Koord NA-GP Fertigst TeilNA","me":"St"},{"nr":"50017200680","bez":"E T Koord NA-GP Umbindung","me":"St"},{"nr":"50017200700","bez":"G T Koord NA-Leitung bef Ofl","me":"m"},{"nr":"50017200800","bez":"G T Koord NA-Leitung unbef Ofl","me":"m"},{"nr":"50017200900","bez":"G T Koord NA-GP unbef Ofl","me":"St"},{"nr":"50017201000","bez":"G T Koord NA-GP im Zuge der Versorgltg","me":"St"},{"nr":"50017201100","bez":"G T Koord NA-GP Einzel-NA","me":"St"},{"nr":"50017201200","bez":"G T Koord NA-GP Erricht TeilNA unbef Ofl","me":"St"},{"nr":"50017201240","bez":"G T Koord NA-GP Erricht TeilNA bef Ofl","me":"St"},{"nr":"50017201260","bez":"G T Koord NA-GP Fertigst TeilNA","me":"St"},{"nr":"50017201280","bez":"G T Koord NA-GP Umbindung","me":"St"},{"nr":"50017201300","bez":"W T Koord NA-Leitung bef Ofl","me":"m"},{"nr":"50017201400","bez":"W T Koord NA-Leitung unbef Ofl","me":"m"},{"nr":"50017201500","bez":"W T Koord NA-GP unbef Ofl","me":"St"},{"nr":"50017201600","bez":"W T Koord NA-GP im Zuge der Versorgltg","me":"St"},{"nr":"50017201700","bez":"W T Koord NA-GP Einzel-NA","me":"St"},{"nr":"50017201800","bez":"W T Koord NA-GP Erricht TeilNA unbef Ofl","me":"St"},{"nr":"50017201840","bez":"W T Koord NA-GP Erricht TeilNA bef Ofl","me":"St"},{"nr":"50017201860","bez":"W T Koord NA-GP Fertigst TeilNA","me":"St"},{"nr":"50017201880","bez":"W T Koord NA-GP Umbindung","me":"St"},{"nr":"50017201900","bez":"E/G/W T Koord Zul NA HoB7 je10cm","me":"m"},{"nr":"50017201910","bez":"E/G/W T Zul NA HoB7 je10cm","me":"m"},{"nr":"50010100100","bez":"E/G/W M LWL =<da63 verlegen","me":"m"},{"nr":"50010100200","bez":"E/G/W M Leerrohr =<da200 verlegen","me":"m"},{"nr":"50010100300","bez":"E/G/W M Nachrichtenkabel","me":"m"},{"nr":"50010100400","bez":"E/G/W M Abzug keine Einmessung","me":"m"},{"nr":"90000000110","bez":"E/G/W/F T Asphalt/Beton je 14cm inkl Entsorg","me":"m"},{"nr":"99006011040","bez":"E/G/W/F T Ofl. Einbau prov. Asphaltdecke je 5 cm","me":"m"},{"nr":"90000000130","bez":"E/G/W/F Abzug ohne Fugenabdichtung","me":"m"},{"nr":"90000004200","bez":"G/W/F T Straßenkappen austauschen","me":"St"},{"nr":"90000004300","bez":"G/W/F T Ausbau von Straßenkappen","me":"St"},{"nr":"90000004400","bez":"G/W/F T Regulierung von Straßenkappe","me":"St"},{"nr":"90000000420","bez":"E/G/W/F T Zulage bei Einbau MSHE","me":"St"},{"nr":"90000000440","bez":"E/G/W/F Wanddurchführung MSH (Trockeneinbau)","me":"St"},{"nr":"90000000460","bez":"E/G/W/F Bodenplatten-Durchführung","me":"St"},{"nr":"99006010100","bez":"G T Koord. HA-GP, Bauabschnitt","me":"St"},{"nr":"99006010200","bez":"W T Koord. HA-GP, Bauabschnitt","me":"St"},{"nr":"99006011050","bez":"T Dep Zul Fahrstrecke","me":"St"},{"nr":"99006011060","bez":"T Abz Kernb bauseits","me":"St"},{"nr":"99006011070","bez":"T Suchschlitze","me":"St"},{"nr":"99006011220","bez":"E T Koord Abz Ofl ohne Decksch","me":"m"},{"nr":"99006011230","bez":"G T Koord Abz Ofl ohne Decksch","me":"m"},{"nr":"99006011240","bez":"W T Koord Abz Ofl ohne Decksch","me":"m"},{"nr":"99006011250","bez":"E T Abz Ofl ohne Decksch","me":"m"},{"nr":"99006011260","bez":"G T Abz Ofl ohne Decksch","me":"m"},{"nr":"99006011270","bez":"W T Abz Ofl ohne Decksch","me":"m"},{"nr":"99006011280","bez":"F T Abz Ofl ohne Decksch SB<=520mm","me":"m"},{"nr":"99006011290","bez":"F T Abz Ofl ohne Decksch SB<=650mm","me":"m"},{"nr":"99006011300","bez":"F T Abz Ofl ohne Decksch SB<=950mm","me":"m"},{"nr":"99006011310","bez":"F T Abz Ofl ohne Decksch SB<=1250mm","me":"m"},{"nr":"99006011315","bez":"F T Abz Ofl ohne Decksch SB<=1550mm","me":"m"},{"nr":"99006011320","bez":"B T Abz Ofl ohne Decksch","me":"m"},{"nr":"50011100900","bez":"E T Ofl Unbefestigt","me":"m"},{"nr":"50011101000","bez":"E T Ofl ohne","me":"m"},{"nr":"50011101100","bez":"E T Ofl Wassergebunden","me":"m"},{"nr":"50011101200","bez":"E T Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50011101300","bez":"E T Ofl Asph/Beton>14cm","me":"m"},{"nr":"50011101400","bez":"E T Ofl Platten/Verbund-Pfl","me":"m"},{"nr":"50011101500","bez":"E T Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50011101600","bez":"E T Ofl Mosaikpflaster","me":"m"},{"nr":"50011101750","bez":"E T Tiefbau KVS=<14Stromkreisl","me":"St"},{"nr":"50011101850","bez":"E T Stellen KVS=<14Stromkreisl","me":"St"},{"nr":"50011101900","bez":"E T LS-GP unbef Ofl LS/AC","me":"St"},{"nr":"50011101910","bez":"E T LS-GP Einzel-LS/AC","me":"St"},{"nr":"50011101920","bez":"E T LS-GP im Zuge andArb","me":"St"},{"nr":"50011102000","bez":"E T Schächte für Rohrschachtanl","me":"St"},{"nr":"50011102100","bez":"E T Zul Ofl Unbefestigt","me":"m"},{"nr":"50011102200","bez":"E T Zul Ofl ohne","me":"m"},{"nr":"50011102300","bez":"E T Zul Ofl Wassergebunden","me":"m"},{"nr":"50011102400","bez":"E T Zul Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50011102500","bez":"E T Zul Ofl Asph/Beton>14cm","me":"m"},{"nr":"50011102600","bez":"E T Zul Ofl Platten/Verbund-Pfl","me":"m"},{"nr":"50011102700","bez":"E T Zul Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50011102800","bez":"E T Zul Ofl Mosaikpflaster","me":"m"},{"nr":"50011103050","bez":"E T Zul Ofl Asph/Beton>22 cm je10cm","me":"m"},{"nr":"50011103060","bez":"E T Zul Mehrtiefe je10cm","me":"m"},{"nr":"50011103350","bez":"E T 1 kV Kabel verlegen","me":"m"},{"nr":"50011103380","bez":"E T Beleuchtung FM SK verlegen","me":"m"},{"nr":"50011103385","bez":"E T LWL-Kabel verlegen","me":"m"},{"nr":"50011103420","bez":"E T 20 kV Kabel=<185 verlegen","me":"m"},{"nr":"50011103440","bez":"E T 20 kV Kabel=<300 verlegen","me":"m"},{"nr":"50011200600","bez":"E T NA-Leitung bef Ofl","me":"m"},{"nr":"50011200650","bez":"E T NA-Leitung unbef Ofl","me":"m"},{"nr":"50011201200","bez":"E T NA-Leitung verlegen","me":"m"},{"nr":"50011200750","bez":"E T NA-GP unbef Ofl","me":"St"},{"nr":"50011200850","bez":"E T NA-GP im Zuge der Hauptltg","me":"St"},{"nr":"50011200950","bez":"E T NA-GP Einzel-NA","me":"St"},{"nr":"50011201020","bez":"E T NA-GP Erricht TeilNA unbef Ofl","me":"St"},{"nr":"50011201040","bez":"E T NA-GP Erricht TeilNA bef Ofl","me":"St"},{"nr":"50011201060","bez":"E T NA-GP Fertigst TeilNA","me":"St"},{"nr":"50011201070","bez":"E T NA-GP Umbindung","me":"St"},{"nr":"50011201080","bez":"E T NA-GP Kopfloch","me":"St"},{"nr":"50011201100","bez":"E T Zul NA Wandst>50cm je10cm","me":"St"},{"nr":"50011600100","bez":"E T Mauerdurchbruch innen","me":"St"},{"nr":"99006011080","bez":"E T 20 kV Kabel=<400 verlegen","me":"m"},{"nr":"99006011010","bez":"E T HA-GP Kopfloch irregulärer HA-Proz.","me":"St"},{"nr":"99006011020","bez":"G T HA-GP Kopfloch irregulärer HA-Proz.","me":"St"},{"nr":"99006011030","bez":"W T HA-GP Kopfloch irregulärer HA-Proz.","me":"St"},{"nr":"99006011090","bez":"T NTS Kompaktstation ohne Ofl","me":"St"},{"nr":"99006011100","bez":"T NTS begehbare Station ohne Ofl","me":"St"},{"nr":"90000000925","bez":"E T Zul NS-Kabel verlegen ohne Tiefbau","me":"m"},{"nr":"90000000926","bez":"E T Zul MS-Kabel verlegen ohne Tiefbau","me":"m"},{"nr":"50012100900","bez":"G T Ofl Unbefestigt","me":"m"},{"nr":"50012101000","bez":"G T Ofl ohne","me":"m"},{"nr":"50012101100","bez":"G T Ofl Wassergebunden","me":"m"},{"nr":"50012101200","bez":"G T Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50012101300","bez":"G T Ofl Asph/Beton>14cm","me":"m"},{"nr":"50012101400","bez":"G T Ofl Platten/Verbund-Pfl","me":"m"},{"nr":"50012101500","bez":"G T Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50012101600","bez":"G T Ofl Mosaikpflaster","me":"m"},{"nr":"50012102540","bez":"G T Zul gr Rohrdurchm bef Ofl","me":"m"},{"nr":"50012102560","bez":"G T Zul gr Rohrdurchm unbef Ofl","me":"m"},{"nr":"50012102660","bez":"G T Zul Einb","me":"St"},{"nr":"50012102850","bez":"G T Zul Ofl Asph/Beton>22cm je10cm","me":"m"},{"nr":"50012102860","bez":"G T Zul Mehrtiefe je10cm","me":"m"},{"nr":"50012102900","bez":"G M PE-Rohr=<da180","me":"m"},{"nr":"50012103000","bez":"G M PE-Rohr=<da355","me":"m"},{"nr":"50012103100","bez":"G M Stahl-Rohr=<DN150","me":"m"},{"nr":"50012103200","bez":"G M Stahl-Rohr=<DN300","me":"m"},{"nr":"50012103210","bez":"G M Zul Einb PE-Rohr=<da180","me":"St"},{"nr":"50012103220","bez":"G M Zul Einb PE-Rohr=<da280","me":"St"},{"nr":"50012103230","bez":"G M Zul Einb Stahl-Rohr=<DN150","me":"St"},{"nr":"50012103240","bez":"G M Zul Einb Stahl-Rohr=<DN250","me":"St"},{"nr":"50012103310","bez":"G M Zul weitere Druckpr","me":"St"},{"nr":"50012103320","bez":"G M Zul DP16 PE-Rohr=<da355","me":"m"},{"nr":"50012103330","bez":"G M Zul DP16 Stahl-Rohr=<DN300","me":"m"},{"nr":"50012103276","bez":"G M Abtr PE-Rohr=<da280","me":"St"},{"nr":"50012103277","bez":"G M Abtr Stahl-Rohr=<DN250","me":"St"},{"nr":"50012103280","bez":"G M Ersatzversorgung","me":"St"},{"nr":"50012103290","bez":"G M Ersatzleitung PE<=da63","me":"m"},{"nr":"50012103295","bez":"G M Zulage je weiteres Gerät","me":"St"},{"nr":"50012200800","bez":"G T NA-Leitung bef Ofl","me":"m"},{"nr":"50012200950","bez":"G T NA-Leitung unbef Ofl","me":"m"},{"nr":"50012201050","bez":"G T NA-GP unbef Ofl","me":"St"},{"nr":"50012201150","bez":"G T NA-GP im Zuge der Versorgltg","me":"St"},{"nr":"50012201220","bez":"G T NA-GP Einzel-NA","me":"St"},{"nr":"50012201250","bez":"G T NA-GP Erricht TeilNA unbef Ofl","me":"St"},{"nr":"50012201350","bez":"G T NA-GP Erricht TeilNA bef Ofl","me":"St"},{"nr":"50012201420","bez":"G T NA-GP Fertigst TeilNA","me":"St"},{"nr":"50012201430","bez":"G T NA-GP Umbindung","me":"St"},{"nr":"50012201450","bez":"G T NA-GP Kopfloch","me":"St"},{"nr":"50012202000","bez":"G T Zul NA Wandst>50cm je10cm","me":"St"},{"nr":"50012202200","bez":"G M NA-Leitung verl+mont","me":"m"},{"nr":"50012202250","bez":"G M NA-GP im Zuge der Versorgltg","me":"St"},{"nr":"50012202350","bez":"G M NA-GP Einzel-NA","me":"St"},{"nr":"50012202360","bez":"G M Zul NA-GP Erneuerung","me":"St"},{"nr":"50012202770","bez":"G M Zul NA-GP Matwechs PE-Stahl","me":"St"},{"nr":"50012202550","bez":"G M NA-GP Erricht TeilNA","me":"St"},{"nr":"50012202650","bez":"G M NA-GP Fertigst TeilNA","me":"St"},{"nr":"50012202750","bez":"G M NA-GP Umbindung","me":"St"},{"nr":"50012202760","bez":"G M NA-GP Netzanschluss trennen","me":"St"},{"nr":"50012600100","bez":"G T Mauerdurchbruch innen","me":"St"},{"nr":"50012600200","bez":"G M Inneninstallation verl+mont","me":"m"},{"nr":"50012600250","bez":"G M GP Inbetriebnahme","me":"St"},{"nr":"50012600300","bez":"G M Zul Inbetriebn je weiteres Gerät","me":"St"},{"nr":"50012600400","bez":"G M Gebrauchsfähigkeitsprüfung","me":"St"},{"nr":"90000002800","bez":"G M PE Rohr <= da 63","me":"St"},{"nr":"99006010300","bez":"G T HA-GP, Bauabschnitt","me":"St"},{"nr":"50013100900","bez":"W T Ofl Unbefestigt","me":"m"},{"nr":"50013101000","bez":"W T Ofl ohne","me":"m"},{"nr":"50013101100","bez":"W T Ofl Wassergebunden","me":"m"},{"nr":"50013101200","bez":"W T Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50013101300","bez":"W T Ofl Asph/Beton>14cm","me":"m"},{"nr":"50013101400","bez":"W T Ofl Platten/Verbund-Pfl","me":"m"},{"nr":"50013101500","bez":"W T Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50013101600","bez":"W T Ofl Mosaikpflaster","me":"m"},{"nr":"50013102540","bez":"W T Zul gr Rohrdurchm bef Ofl","me":"m"},{"nr":"50013102560","bez":"W T Zul gr Rohrdurchm unbef Ofl","me":"m"},{"nr":"50013102580","bez":"W T Zul Einb","me":"St"},{"nr":"50013102850","bez":"W T Zul Ofl Asph/Beton>22cm je10cm","me":"m"},{"nr":"50013102860","bez":"W T Zul Mehrtiefe je10cm","me":"m"},{"nr":"50013102900","bez":"W M PE-Rohr=<da180","me":"m"},{"nr":"50013103000","bez":"W M PE-Rohr=<da355","me":"m"},{"nr":"50013103100","bez":"W M Guss-Rohr =< DN150","me":"m"},{"nr":"50013103200","bez":"W M Guss-Rohr=<DN300","me":"m"},{"nr":"50013103210","bez":"W M Stahl-Rohr=<DN150","me":"m"},{"nr":"50013103220","bez":"W M Stahl -Rohr=<DN300","me":"m"},{"nr":"50013104000","bez":"W M Zul Einb PE-Rohr=<da180","me":"St"},{"nr":"50013104050","bez":"W M Zul Einb PE-Rohr=<da355","me":"St"},{"nr":"50013104100","bez":"W M Zul Einb Stahl-Rohr=<DN150","me":"St"},{"nr":"50013104150","bez":"W M Zul Einb Stahl-Rohr=<DN300","me":"St"},{"nr":"50013104200","bez":"W M Zul Einb Guss-Rohr=<DN150","me":"St"},{"nr":"50013104250","bez":"W M Zul Einb Guss-Rohr=<DN300","me":"St"},{"nr":"50013104300","bez":"W M Zul weitere Druckpr u Desinf","me":"St"},{"nr":"50013103610","bez":"W M Abtr PE-Rohr=<da355","me":"St"},{"nr":"50013103620","bez":"W M Abtr Guss-Rohr=<DN300","me":"St"},{"nr":"50013103630","bez":"W M Abtr Stahl-Rohr=<DN300","me":"St"},{"nr":"50013103700","bez":"W M Ersatzversorgung","me":"St"},{"nr":"50013103750","bez":"W M Ersatzleitung PE<=da63","me":"m"},{"nr":"50013200800","bez":"W T NA-Leitung bef Ofl","me":"m"},{"nr":"50013200950","bez":"W T NA-Leitung unbef Ofl","me":"m"},{"nr":"50013201050","bez":"W T NA-GP unbef Ofl","me":"St"},{"nr":"50013201150","bez":"W T NA-GP im Zuge der Versorgltg","me":"St"},{"nr":"50013201220","bez":"W T NA-GP Einzel-NA","me":"St"},{"nr":"50013201250","bez":"W T NA-GP Erricht TeilNA unbef Ofl","me":"St"},{"nr":"50013201350","bez":"W T NA-GP Erricht TeilNA bef Ofl","me":"St"},{"nr":"50013201420","bez":"W T NA-GP Fertigst TeilNA","me":"St"},{"nr":"50013201430","bez":"W T NA-GP Umbindung","me":"St"},{"nr":"50013201450","bez":"W T NA-GP Kopfloch","me":"St"},{"nr":"50013202100","bez":"W T Zul NA Wandst>50cm je 10cm","me":"St"},{"nr":"50013202300","bez":"W M NA-Leitung verl+mont","me":"m"},{"nr":"50013202350","bez":"W M NA-GP im Zuge der Versorgltg","me":"St"},{"nr":"50013202450","bez":"W M NA-GP Einzel-NA","me":"St"},{"nr":"50013202475","bez":"W M Zul NA-GP Erneuerung","me":"St"},{"nr":"50013202650","bez":"W M NA-GP Erricht TeilNA","me":"St"},{"nr":"50013202750","bez":"W M NA-GP Fertigst TeilNA","me":"St"},{"nr":"50013202850","bez":"W M NA-GP Umbindung","me":"St"},{"nr":"50013202860","bez":"W M NA-GP Netzanschluss trennen","me":"St"},{"nr":"50013600100","bez":"W T Mauerdurchbruch innen","me":"St"},{"nr":"50013600200","bez":"W M Inneninstallation verl+mont","me":"m"},{"nr":"50013600250","bez":"W M GP Inbetriebnahme","me":"St"},{"nr":"90000000500","bez":"W T bef Ofl Auswechslung Armatur<= DN 150","me":"St"},{"nr":"90000000600","bez":"W M Auswechslung Armatur <= DN 150","me":"St"},{"nr":"90000000700","bez":"W T bef Ofl Auswechslung Armatur<= DN 300","me":"St"},{"nr":"90000000800","bez":"W M Auswechslung Armatur <= DN 300","me":"St"},{"nr":"90000002540","bez":"W T Zul gr Rohrdurchm bef Ofl bis DN 600","me":"m"},{"nr":"90000002560","bez":"W T Zul gr Rohrdurchm unbef Ofl bis DN 600","me":"m"},{"nr":"90000002810","bez":"W M PE Rohr=<da63","me":"m"},{"nr":"90000002900","bez":"W M PE-Rohr =<da450","me":"m"},{"nr":"90000003100","bez":"W M Guss-Rohr=<DN400","me":"m"},{"nr":"90000003200","bez":"W M Guss-Rohr=<DN600","me":"m"},{"nr":"90000003210","bez":"W M Stahl-Rohr=<DN400","me":"m"},{"nr":"90000003220","bez":"W M Stahl -Rohr=<DN600","me":"m"},{"nr":"90000003230","bez":"W M Zul Einb PE-Rohr=<da450","me":"St"},{"nr":"90000003240","bez":"W M Zul Einb Stahl/Guss-Rohr= < DN600","me":"St"},{"nr":"99006010400","bez":"W T HA-GP, Bauabschnitt","me":"St"},{"nr":"50014103500","bez":"F T Ofl Unbefestigt=<SB520","me":"m"},{"nr":"50014103550","bez":"F T Ofl ohne=<SB520","me":"m"},{"nr":"50014103600","bez":"F T Ofl Wassergebunden=<SB520","me":"m"},{"nr":"50014103650","bez":"F T Ofl Asph/Bet=<14cm=<SB520","me":"m"},{"nr":"50014103700","bez":"F T Ofl Asph/Bet>14cm=<SB520","me":"m"},{"nr":"50014103750","bez":"F T Ofl Platten/VerbPfl =<SB520","me":"m"},{"nr":"50014103800","bez":"F T Ofl Groß/Kleinpfl=<SB520","me":"m"},{"nr":"50014103850","bez":"F T Ofl Mosaikpflaster=<SB520","me":"m"},{"nr":"50014104000","bez":"F T Ofl Unbefestigt=<SB650","me":"m"},{"nr":"50014104100","bez":"F T Ofl ohne=<SB650","me":"m"},{"nr":"50014104200","bez":"F T Ofl Wassergebunden=<SB650","me":"m"},{"nr":"50014104300","bez":"F T Ofl Asph/Bet=<14cm=<SB650","me":"m"},{"nr":"50014104400","bez":"F T Ofl Asph/Bet>14cm=<SB650","me":"m"},{"nr":"50014104500","bez":"F T Ofl Platten/VerbPfl =<SB650","me":"m"},{"nr":"50014104600","bez":"F T Ofl Groß/Kleinpfl=<SB650","me":"m"},{"nr":"50014104700","bez":"F T Ofl Mosaikpflaster=<SB650","me":"m"},{"nr":"50014104800","bez":"F T Ofl Unbefestigt=<SB950","me":"m"},{"nr":"50014104900","bez":"F T Ofl ohne=<SB950","me":"m"},{"nr":"50014105000","bez":"F T Ofl Wassergebunden=<SB950","me":"m"},{"nr":"50014105100","bez":"F T Ofl Asph/Bet=<14cm=<SB950","me":"m"},{"nr":"50014105200","bez":"F T Ofl Asph/Bet>14cm=<SB950","me":"m"},{"nr":"50014105300","bez":"F T Ofl Platten/VerbPfl=<SB950","me":"m"},{"nr":"50014105400","bez":"F T Ofl Groß/Kleinpfl=<SB950","me":"m"},{"nr":"50014105500","bez":"F T Ofl Mosaikpflaster=<SB950","me":"m"},{"nr":"50014105600","bez":"F T Ofl Unbefestigt=<SB1250","me":"m"},{"nr":"50014105700","bez":"F T Ofl ohne=<SB1250","me":"m"},{"nr":"50014105800","bez":"F T Ofl Wassergebunden=<SB1250","me":"m"},{"nr":"50014105900","bez":"F T Ofl Asph/Bet=<14cm=<SB1250","me":"m"},{"nr":"50014106000","bez":"F T Ofl Asph/Bet>14cm=<SB1250","me":"m"},{"nr":"50014106100","bez":"F T Ofl Platten/VerbPfl=<SB1250","me":"m"},{"nr":"50014106200","bez":"F T Ofl Groß/Kleinpfl=<SB1250","me":"m"},{"nr":"50014106300","bez":"F T Ofl Mosaikpflaster=<SB1250","me":"m"},{"nr":"50014106400","bez":"F T Ofl Unbefestigt=<SB1550","me":"m"},{"nr":"50014106500","bez":"F T Ofl ohne=<SB1550","me":"m"},{"nr":"50014106600","bez":"F T Ofl Wassergebunden=<SB1550","me":"m"},{"nr":"50014106700","bez":"F T Ofl Asph/Bet=<14cm=<SB1550","me":"m"},{"nr":"50014106800","bez":"F T Ofl Asph/Bet>14cm=<SB1550","me":"m"},{"nr":"50014106900","bez":"F T Ofl Platten/VerbPfl=<SB1550","me":"m"},{"nr":"50014107000","bez":"F T Ofl Groß/Kleinpfl=<SB1550","me":"m"},{"nr":"50014107100","bez":"F T Ofl Mosaikpflaster=<SB1550","me":"m"},{"nr":"50014107150","bez":"F T Zul HoB7 SB<=520mm","me":"m"},{"nr":"50014107200","bez":"F T Zul HoB7 SB<=650mm","me":"m"},{"nr":"50014107300","bez":"F T Zul HoB7 SB<=950mm","me":"m"},{"nr":"50014107400","bez":"F T Zul HoB7 SB<=1250mm","me":"m"},{"nr":"50014107500","bez":"F T Zul HoB7 SB<=1550mm","me":"m"},{"nr":"50014107550","bez":"F T Zul Ofl Asph/Beton>22cm SB<=520mm","me":"m"},{"nr":"50014107600","bez":"F T Zul Ofl Asph/Beton>22cm SB<=650mm","me":"m"},{"nr":"50014107700","bez":"F T Zul Ofl Asph/Beton>22cm SB<=950mm","me":"m"},{"nr":"50014107800","bez":"F T Zul Ofl Asph/Beton>22cm SB<=1250mm","me":"m"},{"nr":"50014107900","bez":"F T Zul Ofl Asph/Beton>22cm SB<=1550mm","me":"m"},{"nr":"50014107950","bez":"F T Zul Mehrtiefe SB<=520mm","me":"m"},{"nr":"50014108000","bez":"F T Zul Mehrtiefe SB<=650mm","me":"m"},{"nr":"50014108100","bez":"F T Zul Mehrtiefe SB<=950mm","me":"m"},{"nr":"50014108200","bez":"F T Zul Mehrtiefe SB<=1250mm","me":"m"},{"nr":"50014108300","bez":"F T Zul Mehrtiefe SB<=1550mm","me":"m"},{"nr":"50014108340","bez":"F T Zul U-Dehner SB<=520mm","me":"St"},{"nr":"50014108350","bez":"F T Zul U-Dehner SB<=650mm","me":"St"},{"nr":"50014108360","bez":"F T Zul U-Dehner SB<=950mm","me":"St"},{"nr":"50014108370","bez":"F T Zul U-Dehner SB<=1250mm","me":"St"},{"nr":"50014108380","bez":"F T Zul U-Dehner SB<=1550mm","me":"St"},{"nr":"50014108390","bez":"F T Zul Einb SB<=520mm","me":"St"},{"nr":"50014108391","bez":"F T Zul Einb SB<=650mm","me":"St"},{"nr":"50014108392","bez":"F T Zul Einb SB<=950mm","me":"St"},{"nr":"50014108393","bez":"F T Zul Einb SB<=1250mm","me":"St"},{"nr":"50014108394","bez":"F T Zul Einb SB<=1550mm","me":"St"},{"nr":"50014108400","bez":"F M KMR-Einzelrohrsys=<DN80","me":"m"},{"nr":"50014108500","bez":"F M KMR-Einzelrohrsys=<DN150","me":"m"},{"nr":"50014108600","bez":"F M KMR-Einzelrohrsys=<DN250","me":"m"},{"nr":"50014108700","bez":"F M KMR-Einzelrohrsys=<DN400","me":"m"},{"nr":"50014108710","bez":"F M Zul U-Dehn KMR-Einzelrohrsys=<DN150","me":"St"},{"nr":"50014108720","bez":"F M Zul U-Dehn KMR-Einzelrohrsys=<DN400","me":"St"},{"nr":"50014108800","bez":"F M KMR-Doppelrohrsys=<DN80","me":"m"},{"nr":"50014108900","bez":"F M KMR-Doppelrohrsys=<DN150","me":"m"},{"nr":"50014109000","bez":"F M KMR-Doppelrohrsystem=<DN200","me":"m"},{"nr":"50014109010","bez":"F M Zul U-Dehn KMR-Doppelrohrsys=<DN200","me":"St"},{"nr":"50014109100","bez":"F M Flex-Wellrohrsystem=<DN80","me":"m"},{"nr":"50014109200","bez":"F M Flex- Wellrohrsystem=<DN150","me":"m"},{"nr":"50014109300","bez":"F M Zul Entleerung/Entlüftung","me":"m"},{"nr":"50014200600","bez":"F T NA-Leitung starr bef Ofl","me":"m"},{"nr":"50014200650","bez":"F T NA-Leitung starr unbef Ofl","me":"m"},{"nr":"50014200750","bez":"F T NA-GP starr unbef Ofl","me":"St"},{"nr":"50014200850","bez":"F T NA-GP starr im Zuge der Versorgltg","me":"St"},{"nr":"50014200950","bez":"F T NA-GP starr Einzel-NA","me":"St"},{"nr":"50014200960","bez":"F T NA-GP starr Erricht TeilNA unbef Ofl","me":"St"},{"nr":"50014200970","bez":"F T NA-GP starr Erricht TeilNA bef Ofl","me":"St"},{"nr":"50014200980","bez":"F T NA-GP starr Fertigst TeilNA","me":"St"},{"nr":"50014201050","bez":"F T NA-GP starr Kopfloch","me":"St"},{"nr":"50014201820","bez":"F T Zul NA starr HoB7 je10cm","me":"m"},{"nr":"50014201800","bez":"F T Zul NA Wandst>50cm je10cm","me":"St"},{"nr":"50014202000","bez":"F M NA-Leitung starr verl+mont","me":"m"},{"nr":"50014202050","bez":"F M NA-GP starr im Zuge der Versorgltg","me":"St"},{"nr":"50014202150","bez":"F M NA-GP starr Einzel-NA","me":"St"},{"nr":"50014202160","bez":"F M Zul NA-GP starr Erneuerung","me":"St"},{"nr":"50014202170","bez":"F M NA-GP starr Erricht TeilNA","me":"St"},{"nr":"50014202180","bez":"F M NA-GP starr Fertigst TeilNA","me":"St"},{"nr":"50014500100","bez":"F T Mauerdurchbruch","me":"St"},{"nr":"50014500200","bez":"F M Leitung im Gebäude=<DN50","me":"m"},{"nr":"50014500300","bez":"F M Leitung im Gebäude=<DN150","me":"m"},{"nr":"50014500400","bez":"F M Zulage Ausbau alte Leitung","me":"m"},{"nr":"50014500500","bez":"F M Kompaktstation setzen=<DN50","me":"St"},{"nr":"50014500600","bez":"F M Kompaktstation setzen=<DN100","me":"St"},{"nr":"50014500700","bez":"F M Übergabestation herstellen=<DN50","me":"St"},{"nr":"50014500800","bez":"F M Übergabestation herstellen=<DN100","me":"St"},{"nr":"50014500900","bez":"F M Druck/Temperaturmessstelle","me":"St"},{"nr":"50014501000","bez":"F M Entleerungs-/Entlüftungsventil","me":"St"},{"nr":"50014501100","bez":"F M Durchführung Brandschutzwand","me":"St"},{"nr":"50014502000","bez":"F M Iso Leitung im Gebäude=<DN50","me":"m"},{"nr":"50014502010","bez":"F M Iso Leitung im Gebäude=<DN150","me":"m"},{"nr":"90000004000","bez":"F T Schachtabd f Kugelh u Entlüftu lief u einb","me":"St"},{"nr":"90000004100","bez":"F T Straßenkap f Entleerung abholen und einb","me":"St"},{"nr":"99006010600","bez":"F M Zul Einb KMR-Einzelrohrsys=<DN150","me":"St"},{"nr":"99006010700","bez":"F M Zul Einb KMR-Einzelrohrsys=<DN400","me":"St"},{"nr":"99006011160","bez":"F M Zul Einb KMR-Doppelrohrsys=<DN150","me":"St"},{"nr":"99006011170","bez":"F M Zul Einb KMR-Doppelrohrsys=<DN400","me":"St"},{"nr":"99006011180","bez":"F M Zul Einb Flex- Wellrohrsystem=<DN150","me":"St"},{"nr":"99006011190","bez":"F M Zul weitere Druckpr","me":"St"},{"nr":"50010106000","bez":"SoBa T Grube bef Ofl","me":"m"},{"nr":"50010106010","bez":"SoBa T Grube unbef Ofl","me":"m"},{"nr":"50010106020","bez":"SoBa T Grube Zul Mehrtiefe je 10cm","me":"m"},{"nr":"50010106030","bez":"SoBa T Grube Zul HoB 7 je 10cm","me":"m"},{"nr":"50010106040","bez":"SoBa T NA Grube bef Ofl","me":"m"},{"nr":"50010106050","bez":"SoBa T NA Grube unbef Ofl","me":"m"},{"nr":"50010106060","bez":"SoBa T NA Grube Zul Mehrtiefe je 10cm","me":"m"},{"nr":"50010106070","bez":"SoBa T NA Grube Zul HoB 7 je 10cm","me":"m"},{"nr":"50010106080","bez":"SoBa T Zul Suchschlitze","me":"St"},{"nr":"50012402010","bez":"SoBa M GP Rohrrelining=<da125","me":"St"},{"nr":"50012402020","bez":"SoBa M GP Rohrrelining=<da225","me":"St"},{"nr":"50012402030","bez":"SoBa M GP Rohrrelining=<da280","me":"St"},{"nr":"50012402040","bez":"SoBa M GP Rohrrelining=<da355","me":"St"},{"nr":"50012402050","bez":"SoBa M Relining Zul TV-Insp Altrohrltg","me":"m"},{"nr":"50012402110","bez":"SoBa M NA-GP Rohrrelining=<DN150","me":"St"},{"nr":"50012402150","bez":"SoBa M NA-GP Rohrrelining=<DN200","me":"St"},{"nr":"50012402200","bez":"SoBa M NA-GP Rohrrelining=<DN300","me":"St"},{"nr":"50012402250","bez":"SoBa M NA-GP Rohrrelining=<DN400","me":"St"},{"nr":"50021100180","bez":"B K Unterverteilerschrank","me":"St"},{"nr":"50021100190","bez":"B K Kunstst.schacht < 1200x600x1100","me":"St"},{"nr":"50021100200","bez":"B K Kunstst.schacht < 1800x1000x1100","me":"St"},{"nr":"50021100210","bez":"B K Betonschacht < 1200x600x1100","me":"St"},{"nr":"50021100220","bez":"B K Betonschacht < 1800x1000x1100","me":"St"},{"nr":"50021100230","bez":"B K Zul. Anbind. an bestehenden Betonschacht","me":"St"},{"nr":"50021100400","bez":"B T Ofl Unbefestigt","me":"m"},{"nr":"50021100410","bez":"B T Ofl ohne","me":"m"},{"nr":"50021100420","bez":"B T Ofl Wassergebunden","me":"m"},{"nr":"50021100430","bez":"B T Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50021100440","bez":"B T Ofl Asph/Beton>14cm","me":"m"},{"nr":"50021100450","bez":"B T Ofl Platten/Verbund-Pfl","me":"m"},{"nr":"50021100460","bez":"B T Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50021100470","bez":"B T Ofl Mosaikpflaster","me":"m"},{"nr":"50021100480","bez":"B T Zul Ofl Unbefestigt","me":"m"},{"nr":"50021100490","bez":"B T Zul Ofl ohne","me":"m"},{"nr":"50021100500","bez":"B T Zul Ofl Wassergebunden","me":"m"},{"nr":"50021100510","bez":"B T Zul Ofl Asph/Beton=<14cm","me":"m"},{"nr":"50021100520","bez":"B T Zul Ofl Asph/Beton>14cm","me":"m"},{"nr":"50021100530","bez":"B T Zul Ofl Platten/Verbund-Pfl","me":"m"},{"nr":"50021100540","bez":"B T Zul Ofl Groß/Kleinpflaster","me":"m"},{"nr":"50021100550","bez":"B T Zul Ofl Mosaikpflaster","me":"m"},{"nr":"50021100560","bez":"B T Zul Ofl Asph/Beton>22 cm je10cm","me":"m"},{"nr":"50021100570","bez":"B T Zul Mehrtiefe je10cm","me":"m"},{"nr":"50021100580","bez":"B T Zul HoB7 je10cm","me":"m"},{"nr":"50021100590","bez":"B T Zul zusätzl Absanden für BBK","me":"m"},{"nr":"50021100700","bez":"B R Rohr/Verbundsyst <=63mm einbringen","me":"m"},{"nr":"50021100705","bez":"B R Mini-/Mikrorohre <=16mm einblasen","me":"m"},{"nr":"50021100710","bez":"B R Verbinden von Rohr/Verbundsyst","me":"St"},{"nr":"50021100725","bez":"B R Prüfen und Kalibrieren pro Rohr","me":"St"},{"nr":"50021100730","bez":"B R Druckprüfung pro Rohr","me":"St"},{"nr":"50021100740","bez":"B R Zul. Einzug in belegte Rohre","me":"m"},{"nr":"50021100750","bez":"B R Demontage Kabel","me":"m"},{"nr":"50021100760","bez":"B R Kennzeichnen von vorh. Rohren","me":"St"},{"nr":"50021100900","bez":"B M LWL-Kabel einblasen","me":"m"},{"nr":"50021100910","bez":"B M LWL-Kabel einziehen","me":"m"},{"nr":"50021100920","bez":"B M Spleiß herstellen","me":"St"},{"nr":"50021100930","bez":"B M LWL-Kabel bis 6 Fasern vorb.","me":"St"},{"nr":"50021100940","bez":"B M LWL-Kabel bis 12 Fasern vorb.","me":"St"},{"nr":"50021100950","bez":"B M LWL-Kabel bis 24 Fasern vorb.","me":"St"},{"nr":"50021100960","bez":"B M LWL-Kabel bis 96 Fasern vorb.","me":"St"},{"nr":"50021100970","bez":"B M LWL-Kabel bis 144 Fasern vorb.","me":"St"},{"nr":"50021100980","bez":"B M LWL-Kabel bis 288 Fasern vorb.","me":"St"},{"nr":"50021100990","bez":"B M LWL-Muffe montieren","me":"St"},{"nr":"50021101000","bez":"B M Dämpfungsmessung durchführen","me":"St"},{"nr":"50021101010","bez":"B M OTDR-Messung durchführen","me":"St"},{"nr":"50021101020","bez":"B M Inbetriebsetzung DSLAM","me":"St"},{"nr":"50021200300","bez":"B T NA-Leitung bef Ofl","me":"m"},{"nr":"50021200310","bez":"B T NA-Leitung unbef Ofl","me":"m"},{"nr":"50021200320","bez":"B T NA-GP unbef Ofl","me":"St"},{"nr":"50021200330","bez":"B T NA-GP im Zuge der Hauptltg","me":"St"},{"nr":"50021200340","bez":"B T NA-GP Einzel-NA","me":"St"},{"nr":"50021200350","bez":"B T NA-GP Erricht TeilNA unbef Ofl","me":"St"},{"nr":"50021200360","bez":"B T NA-GP Erricht TeilNA bef Ofl","me":"St"},{"nr":"50021200370","bez":"B T NA-GP Fertigst TeilNA","me":"St"},{"nr":"50021200380","bez":"B T NA-GP Kopfloch","me":"St"},{"nr":"50021200385","bez":"B T Zul NA zusätzl. Kernbohrung","me":"St"},{"nr":"50021200390","bez":"B T Zul NA Wandst>50cm je10cm","me":"St"},{"nr":"50021200500","bez":"B R NA-Mikrorohr einbringen","me":"m"},{"nr":"50021200510","bez":"B R NA-GP im Zuge der Hauptltg","me":"St"},{"nr":"50021200520","bez":"B R NA-GP Einzel-NA","me":"St"},{"nr":"50021200530","bez":"B R Zul NA-GP Erneuerung","me":"St"},{"nr":"50021200540","bez":"B R NA-GP Errichtung TeilNA","me":"St"},{"nr":"50021200550","bez":"B R NA-GP Fertigst TeilNA","me":"St"},{"nr":"50021200700","bez":"B M NA-GP Einzel-NA","me":"St"},{"nr":"50021200710","bez":"B M Zul je weiterer NA","me":"St"},{"nr":"99006010500","bez":"B K Zul. Anbind. an bestehenden Unterverteiler","me":"St"},{"nr":"99006010600","bez":"B K Zul. Anbind. an bestehenden Kunststoffschacht","me":"St"},{"nr":"99006011200","bez":"B K Kunstst.schacht < 1300x480x1100","me":"St"},{"nr":"99006011210","bez":"B K Kunstst.schacht < 1300x960x1100","me":"St"},{"nr":"90000001000","bez":"Sonderleistungen inkl. Skontoaufschlag","me":"EUR"},{"nr":"90000001500","bez":"Gebühr VRAO inkl. Skontoaufschlag","me":"EUR"},{"nr":"50031000100","bez":"K Kleinbaustellenzuschlag Komplett","me":"St"},{"nr":"50031000200","bez":"K Kleinbaustellenzuschlag Tiefbau u Ofl","me":"St"},{"nr":"50031000250","bez":"K Kleinbaustellenzuschlag Montage","me":"St"},{"nr":"50031000300","bez":"K T Aushub bis HoB6=<10cbm","me":"m³"},{"nr":"50031000350","bez":"K T Aushub bis HoB6>10cbm","me":"m³"},{"nr":"50031000400","bez":"K T Aushub HoB7 mB-tausch","me":"m³"},{"nr":"50031000500","bez":"K T Verbau von Gruben und Leitungsgräben","me":"m²"},{"nr":"50031000750","bez":"K T Aushub HoB6 mB-tausch=<10cbm","me":"m³"},{"nr":"50031000770","bez":"K T Aushub HoB6 mB-tausch>10cbm","me":"m³"},{"nr":"50031000950","bez":"K T Asphalt/Beton je 14cm inkl Entsorg","me":"m²"},{"nr":"50031000960","bez":"K T Bitu liefern und einbringen=<10cm","me":"m²"},{"nr":"50031001250","bez":"K T Zulage Bitu lief+einbr je 10cm","me":"m²"},{"nr":"50031001400","bez":"K T AFB lief+aufbringen=<4cm","me":"m²"},{"nr":"50031001500","bez":"K T AFB lief+aufbringen>4cm","me":"m²"},{"nr":"50031001550","bez":"K T Gussasphalt lief+aufbr=<4cm","me":"m²"},{"nr":"50031001650","bez":"K T Gussasphalt lief+aufbr>4cm","me":"m²"},{"nr":"50031001680","bez":"K T Bitubelag abfräsen+Einbau von AFB","me":"m²"},{"nr":"50031001700","bez":"K T Verbundpfl/Platten in Splitt verl","me":"m²"},{"nr":"50031001800","bez":"K T Mosaikpflaster in Splitt verl","me":"m²"},{"nr":"50031001900","bez":"K T Kleinpflaster in Splitt verl","me":"m²"},{"nr":"50031002000","bez":"K T Großpflaster in Splitt verl","me":"m²"},{"nr":"50031002100","bez":"K T Zuschlag für Pflasterverl in Beton","me":"m²"},{"nr":"50031002200","bez":"K T Entwrinne Bord-/Kantenst Setzen","me":"m"},{"nr":"50031002300","bez":"K T Rasen Mutterb Humus=<30cm","me":"m²"},{"nr":"50031002400","bez":"K T Wassergebundene Ofl=<30cm","me":"m²"},{"nr":"50031002500","bez":"K T Wassergebundene Ofl>30cm","me":"m²"},{"nr":"50031002600","bez":"K T Splittaufrieselung ungeb Straßen","me":"m²"},{"nr":"50031002700","bez":"K T Aushub Verfüllma bei prov Decken","me":"m²"},{"nr":"50031002800","bez":"K T Grasflächen ansäen","me":"m²"},{"nr":"50031002960","bez":"K T Ampelanl stellen","me":"St"},{"nr":"50031002970","bez":"K T Ampelanl betreiben","me":"St"},{"nr":"50031003000","bez":"K T Fahrbahnbrücke","me":"St"},{"nr":"50031003200","bez":"K T Kunstoffleerrohr=<d63 verl","me":"m"},{"nr":"50031003300","bez":"K T Kunstoffleerrohr =< d200 verl","me":"m"},{"nr":"50031003350","bez":"K T Einbau Halbschalen als Schutz","me":"m"},{"nr":"50031003400","bez":"K T Strkappe/Schachtabd mit Tragpl","me":"St"},{"nr":"50031003500","bez":"K T Markierungspfahl in Beton setzen","me":"St"},{"nr":"50031003600","bez":"K T Hinweisschild/-tafel","me":"St"},{"nr":"50031003700","bez":"K T Messpfahl setzen","me":"St"},{"nr":"50031003710","bez":"K T Kernb. oder Mauerdurchbr=<50mm","me":"St"},{"nr":"50031003750","bez":"K T Kernb/Mauerdurchbr=<100mm","me":"St"},{"nr":"50031003775","bez":"K T Kernb/Mauerdurchbr=<200mm","me":"St"},{"nr":"50031003790","bez":"K T Zul Kernb/Mauerd je10cm","me":"St"},{"nr":"50031004200","bez":"K T Beton C 8/10","me":"m³"},{"nr":"50031004300","bez":"K T Beton C 20/25 mit Schalung/Bew","me":"m³"},{"nr":"50031004350","bez":"K T Beton C 20/25 ohne Schalung/Bew","me":"m³"},{"nr":"50031004400","bez":"K T Beton-/Verbundpflaster","me":"m²"},{"nr":"50031004500","bez":"K T Plattenbelag/Rasengittersteine","me":"m²"},{"nr":"50031004600","bez":"K T Rasenkantensteine","me":"m"},{"nr":"50031004700","bez":"K T Bordsteine","me":"m"},{"nr":"50031004800","bez":"K T Mutterboden","me":"m³"},{"nr":"50031004900","bez":"K T Riesel/Schotter/Splitt","me":"m³"},{"nr":"50031005000","bez":"K T Sand","me":"m³"},{"nr":"50031005100","bez":"K T Mineralbeton","me":"m³"},{"nr":"50031005200","bez":"K T Facharbeiter/Schachtmeister","me":"H"},{"nr":"50031005300","bez":"K T Hilfsarbeiter/Baugehilfe","me":"H"},{"nr":"50031005400","bez":"K T Kompressor mit Hammer","me":"H"},{"nr":"50031005500","bez":"K T Rüttelplatte bis 1000 kg","me":"H"},{"nr":"50031005600","bez":"K T Kleinbagger","me":"H"},{"nr":"50031005700","bez":"K T Bagger oder Lader","me":"H"},{"nr":"50031005800","bez":"K T Transporter","me":"H"},{"nr":"50031005901","bez":"K T LKW bis 3,5 to","me":"H"},{"nr":"50031005931","bez":"K T LKW bis 7,5 to","me":"H"},{"nr":"50031005941","bez":"K T LKW über 7,5 to","me":"H"},{"nr":"50031006000","bez":"K T LKW mit Hänger/Kabeltransportw","me":"H"},{"nr":"50031006100","bez":"K T Tieflader Mastentransportwagen","me":"H"},{"nr":"50031006200","bez":"K T Wasserpumpe min 5 l/s","me":"H"},{"nr":"50031006310","bez":"K T Saugbagger bis 2 m3 Behältervolumen","me":"H"},{"nr":"50031006320","bez":"K T Saugbagger bis 5 m3 Behältervolumen","me":"H"},{"nr":"50031006330","bez":"K T Saugbagger bis 8 m3 Behältervolumen","me":"H"},{"nr":"50031005950","bez":"K T Steiger bis 12 m Arbeitshöhe","me":"H"},{"nr":"50031005960","bez":"K T Steiger bis 24 m Arbeitshöhe","me":"H"},{"nr":"50031005970","bez":"K T Steiger über 24 m Arbeitshöhe","me":"H"},{"nr":"50032000100","bez":"K E Verl FM Bel Steuerkabel","me":"m"},{"nr":"50032000150","bez":"K E Verl LWL-Leerrohr","me":"m"},{"nr":"50032000200","bez":"K E Verl 1-kV-Kabel=<4x150mm2","me":"m"},{"nr":"50032000210","bez":"K E Verl 1-kV-Kabel=<4x240mm2","me":"m"},{"nr":"50032000300","bez":"K E Verl 20-kV-Sys=<185mm2","me":"m"},{"nr":"50032000400","bez":"K E Verl 20-kV-Sys=<300mm2","me":"m"},{"nr":"50032001300","bez":"K E Erdung Grundpreis","me":"St"},{"nr":"50032001400","bez":"K E Einbringen der Erderstäbe=<5m","me":"St"},{"nr":"50032001500","bez":"K E Erdungsband Überd=<0,6m","me":"m"},{"nr":"50032005750","bez":"K E Aufnehmen FM Bel 1-kV-Kabel","me":"m"},{"nr":"50032005900","bez":"K E Aufnehmen Massekabel 20-kV","me":"m"},{"nr":"50032006000","bez":"K E Aufnehmen Einleiterkabel","me":"m"},{"nr":"50032006150","bez":"K E Stellen KVS=<14Stromkreisl","me":"St"},{"nr":"50032006350","bez":"K E Abbau KV-Schrank =<14 Stromkreisl.","me":"St"},{"nr":"50034000100","bez":"K GP Verl PE-Rohr=<da63","me":"m"},{"nr":"50034000200","bez":"K GP Verl PE-Rohr=<da180","me":"m"},{"nr":"50034000300","bez":"K GP Verl PE-Rohr=<da355","me":"m"},{"nr":"50034000400","bez":"K GP Einbau Armatur=<da63","me":"St"},{"nr":"50034000500","bez":"K GP Einbau Armatur=<da180","me":"St"},{"nr":"50034000600","bez":"K GP Einbau Armatur=<da355","me":"St"},{"nr":"50034000610","bez":"K GP Herst Stumpfschweißung =<da63","me":"St"},{"nr":"50034000620","bez":"K GP Herst Stumpfschweißung=<da180","me":"St"},{"nr":"50034000630","bez":"K GP Herst Stumpfschweißung =<da355","me":"St"},{"nr":"50034000640","bez":"K GP Formstück=<da63","me":"St"},{"nr":"50034000650","bez":"K GP Formstück=<da180","me":"St"},{"nr":"50034000660","bez":"K GP Formstück=<da355","me":"St"},{"nr":"50034001000","bez":"K GP Einbindung in PE abq=<da63","me":"St"},{"nr":"50034001100","bez":"K GP Einbindung in PE abq=<da160","me":"St"},{"nr":"50034001200","bez":"K GP Einbindung in PE =<da63","me":"St"},{"nr":"50034001300","bez":"K GP Einbindung in PE=<da180","me":"St"},{"nr":"50034001400","bez":"K GP Einbindung in PE=<da355","me":"St"},{"nr":"50034001410","bez":"K GP Setzen Rohrbrücke=<10m","me":"St"},{"nr":"50034001430","bez":"K GP Zul Mehrlänge Rohrbrücke","me":"m"},{"nr":"50034001500","bez":"K GP Abquetschen =<da63","me":"St"},{"nr":"50034001600","bez":"K GP Abquetschen =<da160","me":"St"},{"nr":"50034001610","bez":"K GP Ausbau PE/PVC-Leitung","me":"m"},{"nr":"50034001620","bez":"K GP Repschelle PE=<da180","me":"St"},{"nr":"50034002000","bez":"K GP Repschelle PE=<da355","me":"St"},{"nr":"50034002100","bez":"K GP Rep Schadstelle PVC=<DN150","me":"St"},{"nr":"50034002200","bez":"K GP Rep Schadstelle PVC=<DN200","me":"St"},{"nr":"50034002360","bez":"K GP Druckprüfung A3","me":"St"},{"nr":"50034002400","bez":"K GP PE-Schweißer inkl Ausrüstung","me":"H"},{"nr":"50034002500","bez":"K GP Helfer","me":"H"},{"nr":"50035000100","bez":"K GS Verl Stahlrohr=<DN50","me":"m"},{"nr":"50035000200","bez":"K GS Verl Stahlrohr=<DN150","me":"m"},{"nr":"50035000300","bez":"K GS Verl Stahlrohr=<DN300","me":"m"},{"nr":"50035000700","bez":"K GS Einbau Armatur=<DN50","me":"St"},{"nr":"50035000800","bez":"K GS Einbau Armatur=<DN150","me":"St"},{"nr":"50035000900","bez":"K GS Einbau Armatur=<DN300","me":"St"},{"nr":"50035001000","bez":"K GS Herst Schweißnaht=<DN50","me":"St"},{"nr":"50035001100","bez":"K GS Herst Schweißnaht=<DN150","me":"St"},{"nr":"50035001200","bez":"K GS Herst Schweißnaht=<DN300","me":"St"},{"nr":"50035001300","bez":"K GS Anbringen Messkabel KKS","me":"St"},{"nr":"50035001800","bez":"K GS Einbindung in Stahl=<DN50","me":"St"},{"nr":"50035001900","bez":"K GS Einbindung in Stahl=<DN150","me":"St"},{"nr":"50035002000","bez":"K GS Einbindung in Stahl=<DN300","me":"St"},{"nr":"50035002700","bez":"K GS Setzen Rohrbrücke=<10 m","me":"St"},{"nr":"50035002850","bez":"K GS Zul Mehrlänge Rohrbrücke","me":"m"},{"nr":"50035002710","bez":"K GP Ausbau Stahl/Guss-Leitung","me":"m"},{"nr":"50035003500","bez":"K GS Abdichten Muffe=<DN150","me":"St"},{"nr":"50035003600","bez":"K GS Abdichten Muffe=<DN300","me":"St"},{"nr":"50035003700","bez":"K GS Setzen Repschelle=<DN150","me":"St"},{"nr":"50035003800","bez":"K GS Setzen Repschelle=<DN300","me":"St"},{"nr":"50035003900","bez":"K GS Montieren Anbohrschelle =<DN300","me":"St"},{"nr":"50035004100","bez":"K GS Aufschweißen Reparaturblech/sattel","me":"St"},{"nr":"50035003000","bez":"K GS Druckprüfung A3","me":"St"},{"nr":"50035004600","bez":"K GS Stahl-Schweißer inkl Ausrüstung","me":"H"},{"nr":"50035004700","bez":"K GS Schweißhelfer","me":"H"},{"nr":"50036000050","bez":"K WP Verl PE-Rohr=<da63","me":"m"},{"nr":"50036000100","bez":"K WP Verl PE-Rohr=<da180","me":"m"},{"nr":"50036000200","bez":"K WP Verl PE-Rohr=<da355","me":"m"},{"nr":"50036000500","bez":"K WP Verl PVC-Rohr=<da180","me":"m"},{"nr":"50036000600","bez":"K WP Verl PVC-Rohr=<da355","me":"m"},{"nr":"50036000700","bez":"K WP Einbau Armatur/Hydr=<da63","me":"St"},{"nr":"50036000800","bez":"K WP Einbau Armatur/Hydr=<da180","me":"St"},{"nr":"50036000900","bez":"K WP Einbau Armatur/Hydr=<da355","me":"St"},{"nr":"50036000910","bez":"K WP Herst Stumpfschweißung =<da63","me":"St"},{"nr":"50036000920","bez":"K WP Herst Stumpfschweißung =<da180","me":"St"},{"nr":"50036000930","bez":"K WP Herst Stumpfschweißung =<da355","me":"St"},{"nr":"50036000940","bez":"K WP Formstück=<da63","me":"St"},{"nr":"50036000950","bez":"K WP Formstück=<da180","me":"St"},{"nr":"50036000960","bez":"K WP Formstück=<da355","me":"St"},{"nr":"50036000970","bez":"K WP Herst PVC-Verklebung=<da180","me":"St"},{"nr":"50036000980","bez":"K WP Herst PVC-Verklebung=<da355","me":"St"},{"nr":"50035001110","bez":"K WP Einbindung in PE/PVC=<da63","me":"St"},{"nr":"50036001050","bez":"K WP Einbindung in PE/PVC=<da180","me":"St"},{"nr":"50036001150","bez":"K WP Einbindung in PE/PVC=<da355","me":"St"},{"nr":"50036001360","bez":"K WP Setzen Rohrbrücke=<10m","me":"St"},{"nr":"50036001370","bez":"K WP Zulage Mehrlänge Rohrbrücke","me":"m"},{"nr":"50036001400","bez":"K WP Abquetschen=<da63","me":"St"},{"nr":"50036001500","bez":"K WP Abquetschen=<da160","me":"St"},{"nr":"50036001550","bez":"K WP Ausbau PE/PVC-Leitung","me":"m"},{"nr":"50036001800","bez":"K WP Repschelle PE=<da180","me":"St"},{"nr":"50036001900","bez":"K WP Repschelle PE=<da355","me":"St"},{"nr":"50036002000","bez":"K WP Rep PVC-Leitung=<da63","me":"St"},{"nr":"50036002100","bez":"K WP Rep PVC-Leitung=<da180","me":"St"},{"nr":"50036002200","bez":"K WP Rep PVC-Leitung=<da355","me":"St"},{"nr":"50036002500","bez":"K WP Druckprüfung =< 25 bar","me":"St"},{"nr":"50036002600","bez":"K WP PE Schweißer inkl Ausrüstung","me":"H"},{"nr":"50036002800","bez":"K WP Helfer","me":"H"},{"nr":"50037000100","bez":"K WG Verl Gussrohr=<DN50","me":"m"},{"nr":"50037000200","bez":"K WG Verl Gussrohr=<DN150","me":"m"},{"nr":"50037000300","bez":"K WG Verl Gussrohr=<DN300","me":"m"},{"nr":"50037000450","bez":"K WG Einbau Formstück=<DN50","me":"St"},{"nr":"50037000550","bez":"K WG Einbau Formstück=<DN150","me":"St"},{"nr":"50037000650","bez":"K WG Einbau Formstück=<DN300","me":"St"},{"nr":"50037000700","bez":"K WG Einbau Armatur/Hydr=<50","me":"St"},{"nr":"50037000800","bez":"K WG Einbau Armatur/Hydr=<DN150","me":"St"},{"nr":"50037000900","bez":"K WG Einbau Armatur/Hydr=<DN300","me":"St"},{"nr":"50037000910","bez":"K WG Einbindung in Guss/AZ=<DN50","me":"St"},{"nr":"50037000920","bez":"K WG Einbindung in Guss/AZ=<DN150","me":"St"},{"nr":"50037000930","bez":"K WG Einbindung in Guss/AZ=<DN300","me":"St"},{"nr":"50037000940","bez":"K WG Setzen Rohrbrücke=<10m","me":"St"},{"nr":"50037000950","bez":"K WG Zul Mehrlänge Rohrbrücke","me":"m"},{"nr":"50037000960","bez":"K WG Ausbau Guss-Leitung","me":"m"},{"nr":"50037002450","bez":"K WG Setzen Repschelle=<DN150","me":"St"},{"nr":"50037002550","bez":"K WG Setzen Repschelle=<DN300","me":"St"},{"nr":"50037002650","bez":"K WG Montieren Anbohrschelle=<DN300","me":"St"},{"nr":"50036002300","bez":"K WG Rep AZ-Leitung=<DN150","me":"St"},{"nr":"50036002400","bez":"K WG Rep AZ-Leitung=<DN300","me":"St"},{"nr":"50037002300","bez":"K WG Druckprüfung=<25bar","me":"St"},{"nr":"50037002410","bez":"K WG PE Monteur inkl Ausrüstung","me":"H"},{"nr":"50037002420","bez":"K WG Helfer","me":"H"},{"nr":"50038004000","bez":"K F Verlegen KMR-Einzelrohrsys=<DN80","me":"m"},{"nr":"50038004100","bez":"K F Verlegen KMR-Einzelrohrsys=<DN150","me":"m"},{"nr":"50038004200","bez":"K F Verlegen KMR-Einzelrohrsys=<DN250","me":"m"},{"nr":"50038004300","bez":"K F Verlegen KMR-Einzelrohrsys=<DN400","me":"m"},{"nr":"50038004400","bez":"K F Verlegen KMR-Doppelrohrsys=<DN80","me":"m"},{"nr":"50038004500","bez":"K F Verlegen KMR-Doppelrohrsys=<DN150","me":"m"},{"nr":"50038004600","bez":"K F Verlegen KMR-Doppelrohrsys=<DN200","me":"m"},{"nr":"50038004700","bez":"K F Verlegen SMR-Sys=<DN80","me":"m"},{"nr":"50038004800","bez":"K F Verlegen SMR-Sys=<DN150","me":"m"},{"nr":"50038004900","bez":"K F Verlegen SMR-Sys=<DN250","me":"m"},{"nr":"50038005000","bez":"K F Verlegen SMR-Sys=<DN400","me":"m"},{"nr":"50038005100","bez":"K F Verlegen Flex-Wellrohrsys =<DN80","me":"m"},{"nr":"50038005200","bez":"K F Verlegen Flex-Wellrohrsys=<DN150","me":"m"},{"nr":"50038005300","bez":"K F Einbau Formstück=<DN80","me":"St"},{"nr":"50038005400","bez":"K F Einbau Formstück=<DN150","me":"St"},{"nr":"50038005500","bez":"K F Einbau Formstück=<DN250","me":"St"},{"nr":"50038005600","bez":"K F Einbau Formstück=<DN400","me":"St"},{"nr":"50038005700","bez":"K F Einbau Armatur= DN80","me":"St"},{"nr":"50038005800","bez":"K F Einbau Armatur=<DN150","me":"St"},{"nr":"50038005900","bez":"K F Einbau Armatur=<DN250","me":"St"},{"nr":"50038006000","bez":"K F Einbau Armatur=<DN400","me":"St"},{"nr":"50038006100","bez":"K F Zulage Nachisolierung=<DN80","me":"St"},{"nr":"50038006200","bez":"K F Zulage Nachisolierung=<DN150","me":"St"},{"nr":"50038006300","bez":"K F Zulage Nachisolierung=<DN250","me":"St"},{"nr":"50038006400","bez":"K F Zulage Nachisolierung=<DN400","me":"St"},{"nr":"50038006500","bez":"K F Herstellen Schweißnaht=<DN80","me":"St"},{"nr":"50038006600","bez":"K F Herstellen Schweißnaht=<DN150","me":"St"},{"nr":"50038006700","bez":"K F Herstellen Schweißnaht=<DN250","me":"St"},{"nr":"50038006800","bez":"K F Herstellen Schweißnaht=<DN400","me":"St"},{"nr":"50038006900","bez":"K F Einbindung in KMR=<DN80 Entl. AN","me":"St"},{"nr":"50038007000","bez":"K F Einbindung in KMR=<DN150 Entl. AN","me":"St"},{"nr":"50038007100","bez":"K F Einbindung in KMR=<DN250 Entl. AN","me":"St"},{"nr":"50038007200","bez":"K F Einbindung in KMR=<DN400 Entl. AN","me":"St"},{"nr":"50038007400","bez":"K F Einbindung in SMR=<DN80 Entl. AN","me":"St"},{"nr":"50038007500","bez":"K F Einbindung in SMR=<DN150 Entl. AN","me":"St"},{"nr":"50038007600","bez":"K F Einbindung in SMR=<DN250 Entl. AN","me":"St"},{"nr":"50038007700","bez":"K F Einbindung in SMR=<DN400 Entl. AN","me":"St"},{"nr":"50038007800","bez":"K F Einbindung in Flex=<DN80 Entl. AN","me":"St"},{"nr":"50038007900","bez":"K F Einbindung in Flex=<DN150 Entl. AN","me":"St"},{"nr":"50038007910","bez":"K F Einbindung in KMR=<DN80 Entl. AG","me":"St"},{"nr":"50038007915","bez":"K F Einbindung in KMR=<DN150 Entl. AG","me":"St"},{"nr":"50038007920","bez":"K F Einbindung in KMR=<DN250 Entl. AG","me":"St"},{"nr":"50038007925","bez":"K F Einbindung in KMR=<DN400 Entl. AG","me":"St"},{"nr":"50038007930","bez":"K F Einbindung in SMR=<DN80 Entl. AG","me":"St"},{"nr":"50038007935","bez":"K F Einbindung in SMR=<DN150 Entl. AG","me":"St"},{"nr":"50038007940","bez":"K F Einbindung in SMR=<DN250 Entl. AG","me":"St"},{"nr":"50038007945","bez":"K F Einbindung in SMR=<DN400 Entl. AG","me":"St"},{"nr":"50038007950","bez":"K F Einbindung in Flex=<DN80 Entl. AG","me":"St"},{"nr":"50038007955","bez":"K F Einbindung in Flex=<DN150 Entl. AG","me":"St"},{"nr":"50038008000","bez":"K F Setzen Reparaturschelle=<DN150","me":"St"},{"nr":"50038003000","bez":"K F Setzen Reparaturschelle=<DN200","me":"St"},{"nr":"50038003100","bez":"K F Setzen Reparaturschelle=<DN400","me":"St"},{"nr":"50038002600","bez":"K F Druckprüfung Sichtverfahren 5.1","me":"St"},{"nr":"50038008100","bez":"K F Druckprüfung Sichtverfahren 5.3","me":"St"},{"nr":"50038002800","bez":"K F Druckprüfung Sichtverfahren 5.4","me":"St"},{"nr":"50038002900","bez":"K F Druckprüfung Druckmessverf 5.5","me":"St"},{"nr":"50038003800","bez":"K F Stahl-Schweißer inkl Ausrüstung","me":"H"},{"nr":"50038003810","bez":"K F Isolierer für KMR","me":"H"},{"nr":"50038003820","bez":"K F Isolierer für Innenleitungen","me":"H"},{"nr":"50038003900","bez":"K F Schweißhelfer","me":"H"},{"nr":"50031006500","bez":"K T GP Entstörungsdienst Tiefbau E/G/W/F","me":"St"},{"nr":"50031006600","bez":"K M GP Entstörungsdienst Montage G/W/F","me":"St"}]
+;
+
+/* ════════ Hilfsfunktionen ════════ */
+const fmtDate = iso => {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+};
+
+/* ════════ Synchronisation ════════ */
+function syncAll() {
+  const aufnr   = document.getElementById('g-aufnr').value;
+  const von     = fmtDate(document.getElementById('g-von').value);
+  const bis     = fmtDate(document.getElementById('g-bis').value);
+  const fertig  = fmtDate(document.getElementById('g-fertig').value);
+  const ort     = document.getElementById('g-ort').value;
+  const strasse = document.getElementById('g-strasse').value;
+  const baum    = document.getElementById('g-baum').value;
+  const sparte  = document.getElementById('g-sparte')?.value || '';
+  const zeitraum = von && bis ? `${von} – ${bis}` : (von || bis || '');
+
+  // Druckköpfe WT
+  document.getElementById('ph-wt-aufnr').textContent   = aufnr;
+  document.getElementById('ph-wt-zeitraum').textContent = zeitraum;
+  document.getElementById('ph-wt-fertig').textContent  = fertig;
+  document.getElementById('ph-wt-ort').textContent     = ort;
+  document.getElementById('ph-wt-strasse').textContent = strasse;
+  document.getElementById('ph-wt-baum').textContent    = baum;
+  document.getElementById('ph-wt-sparte').textContent  = sparte;
+  // Druckköpfe WM
+  document.getElementById('ph-wm-aufnr').textContent   = aufnr;
+  document.getElementById('ph-wm-zeitraum').textContent = zeitraum;
+  document.getElementById('ph-wm-fertig').textContent  = fertig;
+  document.getElementById('ph-wm-ort').textContent     = ort;
+  document.getElementById('ph-wm-strasse').textContent = strasse;
+  document.getElementById('ph-wm-baum').textContent    = baum;
+  document.getElementById('ph-wm-sparte').textContent  = sparte;
+  // Druckköpfe OFL
+  document.getElementById('ph-ofl-aufnr').textContent  = aufnr;
+  document.getElementById('ph-ofl-fertig').textContent = fertig;
+  document.getElementById('ph-ofl-baum').textContent   = baum;
+  // OFL-Felder
+  document.getElementById('ofl-aufnr').value  = aufnr;
+  document.getElementById('ofl-baum').value   = baum;
+  document.getElementById('ofl-ort').value    = ort;
+  document.getElementById('ofl-strasse').value = strasse;
+  document.getElementById('ofl-datum').value  = fertig;
+}
+document.addEventListener('input', syncAll);
+
+/* ════════ Tab-Steuerung ════════ */
+const ROTH_LOGO = 'data:image/png;base64,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';
+
+// Erstelldatum und Logo initialisieren
+(function() {
+  const today = new Date().toLocaleDateString('de-DE');
+  document.querySelectorAll('.sig-date-an').forEach(el => el.textContent = today);
+  document.querySelectorAll('.print-logo').forEach(img => img.src = ROTH_LOGO);
+})();
+
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function setAufmassMode() {
+  const mode = document.getElementById('g-mode').value;
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const wtBtn = tabBtns[0], wmBtn = tabBtns[1], oflBtn = tabBtns[2];
+  if (mode === 'wt') {
+    wmBtn.style.display = 'none';
+    wtBtn.style.display = '';
+    oflBtn.style.display = '';
+    showTab('wt', wtBtn);
+  } else if (mode === 'wm') {
+    wtBtn.style.display = 'none';
+    wmBtn.style.display = '';
+    oflBtn.style.display = 'none';
+    showTab('wm', wmBtn);
+  } else {
+    wtBtn.style.display = '';
+    wmBtn.style.display = '';
+    oflBtn.style.display = '';
+  }
+}
+
+/* ════════ Autocomplete-Suche (THÜGA) ════════ */
+let activeDropdown = null;
+
+function closeAllDropdowns() {
+  document.querySelectorAll('.s-dropdown.open').forEach(d => d.classList.remove('open'));
+  activeDropdown = null;
+}
+
+function makeAutocomplete(searchInput, bezInput, ehSelect) {
+  const wrap = searchInput.parentElement;
+  const drop = document.createElement('div');
+  drop.className = 's-dropdown';
+  wrap.appendChild(drop);
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if (q.length < 2) { drop.classList.remove('open'); return; }
+
+    const matches = TUEGA.filter(p =>
+      p.nr.toLowerCase().startsWith(q) ||
+      p.bez.toLowerCase().includes(q)
+    ).slice(0, 10);
+
+    drop.innerHTML = '';
+    if (matches.length === 0) {
+      drop.innerHTML = '<div class="s-no-result">Keine Treffer</div>';
+    } else {
+      matches.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 's-option';
+        div.innerHTML =
+          `<strong>${p.bez}</strong>` +
+          `<span class="s-nr">${p.nr}</span>` +
+          `<span class="s-me">${p.me}</span>`;
+        div.addEventListener('mousedown', e => {
+          e.preventDefault();
+          searchInput.value = p.nr;
+          bezInput.value    = p.bez;
+          // Einheit setzen
+          for (let i = 0; i < ehSelect.options.length; i++) {
+            if (ehSelect.options[i].value.toUpperCase() === p.me.toUpperCase()) {
+              ehSelect.selectedIndex = i; break;
+            }
+          }
+          drop.classList.remove('open');
+          bezInput.focus();
+        });
+        drop.appendChild(div);
+      });
+    }
+    closeAllDropdowns();
+    drop.classList.add('open');
+    activeDropdown = drop;
+  });
+
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => drop.classList.remove('open'), 200);
+  });
+  searchInput.addEventListener('focus', () => {
+    if (searchInput.value.trim().length >= 2) searchInput.dispatchEvent(new Event('input'));
+  });
+}
+
+/* ════════ Sonstiges-Zeilen ════════ */
+function buildRow() {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="td-nr"><div class="s-wrap"><input type="text" class="s-search" placeholder="Nr. oder Text eingeben …"></div></td>
+    <td class="td-bez"><input type="text" placeholder="Bezeichnung" style="width:100%;border:none;border-bottom:1px solid #ccc;padding:2px 4px;font-size:11px;background:#f0fff0;font-weight:bold;color:#1a3a6b;"></td>
+    <td class="td-eh"><select class="s-eh-sel">
+      <option>M</option><option>M²</option><option>M³</option>
+      <option>ST</option><option>H</option><option>EUR</option>
+    </select></td>
+    <td class="td-mg"><input type="number" step="0.01" min="0" style="width:100%;border:none;border-bottom:1px solid #999;font-size:12px;text-align:right;padding:2px 4px;background:#fffde7;"></td>
+    <td><input type="text" placeholder="Erläuterung" style="width:100%;border:none;border-bottom:1px solid #ccc;padding:2px 4px;font-size:11px;background:transparent;"></td>
+    <td class="no-print" style="text-align:center;"><button class="btn btn-del" onclick="this.closest('tr').remove()">&#10005;</button></td>
+  `;
+  const searchInput = tr.querySelector('.s-search');
+  const bezInput    = tr.querySelectorAll('input[type=text]')[1];
+  const ehSelect    = tr.querySelector('select');
+  makeAutocomplete(searchInput, bezInput, ehSelect);
+  return tr;
+}
+
+function addRow(tbodyId) {
+  document.getElementById(tbodyId).appendChild(buildRow());
+}
+
+function initRows(tbodyId, n) {
+  for (let i = 0; i < n; i++) addRow(tbodyId);
+}
+initRows('s-wt', 4);
+initRows('s-wm', 4);
+setAufmassMode();
+
+/* ════════ Leere Zeilen im Druck ausblenden ════════ */
+window.addEventListener('beforeprint', () => {
+  // Standard-Positionen: Menge leer → ausblenden
+  document.querySelectorAll('.pos-tbl tbody tr').forEach(tr => {
+    const mg = tr.querySelector('input[type=number]');
+    const isEmpty = !mg || mg.value === '' || mg.value === '0' || parseFloat(mg.value || '0') === 0;
+    tr.classList.toggle('hide-print', isEmpty);
+  });
+  // Sonstiges-Zeilen: Menge leer → ausblenden
+  document.querySelectorAll('#s-wt tr, #s-wm tr').forEach(tr => {
+    const mg = tr.querySelector('input[type=number]');
+    const bez = tr.querySelector('input[type=text]');
+    const isEmpty = !mg || (mg.value === '' && (!bez || bez.value === ''));
+    tr.classList.toggle('hide-print', isEmpty);
+  });
+});
+
+window.addEventListener('afterprint', () => {
+  document.querySelectorAll('.hide-print').forEach(tr => tr.classList.remove('hide-print'));
+});
+
+/* ════════ Mängel-Checkboxen ════════ */
+function xorCb(me, other) {
+  const o = document.getElementById(other);
+  if (document.getElementById(me).checked) o.checked = false;
+}
+
+/* ════════ Speichern / Laden ════════ */
+function collectState() {
+  const s = {
+    _swt: document.getElementById('s-wt').children.length,
+    _swm: document.getElementById('s-wm').children.length
+  };
+  document.querySelectorAll('input[type=text],input[type=number],input[type=date],textarea')
+    .forEach((el,i) => { s['i'+i] = el.value; });
+  document.querySelectorAll('input[type=checkbox]')
+    .forEach((el,i) => { s['c'+i] = el.checked; });
+  document.querySelectorAll('input[type=radio]')
+    .forEach((el,i) => { s['r'+i] = el.checked; });
+  document.querySelectorAll('select')
+    .forEach((el,i) => { s['s'+i] = el.value; });
+  return s;
+}
+
+function saveData() {
+  const aufnr = (document.getElementById('g-aufnr').value || 'Aufmass').replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const datum = new Date().toLocaleDateString('de-DE').replace(/\./g, '-');
+  const filename = 'SWK-Koordiniert-Aufmass_' + aufnr + '_' + datum + '.json';
+  const blob = new Blob([JSON.stringify(collectState(), null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function loadData() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const s = JSON.parse(ev.target.result);
+        document.getElementById('s-wt').innerHTML = '';
+        document.getElementById('s-wm').innerHTML = '';
+        initRows('s-wt', s._swt || 4);
+        initRows('s-wm', s._swm || 4);
+        document.querySelectorAll('input[type=text],input[type=number],input[type=date],textarea')
+          .forEach((el,i) => { if (s['i'+i] !== undefined) el.value = s['i'+i]; });
+        document.querySelectorAll('input[type=checkbox]')
+          .forEach((el,i) => { if (s['c'+i] !== undefined) el.checked = s['c'+i]; });
+        document.querySelectorAll('input[type=radio]')
+          .forEach((el,i) => { if (s['r'+i] !== undefined) el.checked = s['r'+i]; });
+        document.querySelectorAll('select')
+          .forEach((el,i) => { if (s['s'+i] !== undefined) el.value = s['s'+i]; });
+        syncAll();
+        setAufmassMode();
+      } catch(err) { alert('Fehler beim Laden: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function clearAll() {
+  if (!confirm('Alle Eingaben wirklich löschen?')) return;
+  document.querySelectorAll('input[type=text],input[type=number],input[type=date],textarea')
+    .forEach(el => el.value = '');
+  document.querySelectorAll('input[type=checkbox],input[type=radio]')
+    .forEach(el => el.checked = false);
+  document.querySelectorAll('select')
+    .forEach(el => el.selectedIndex = 0);
+  
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.s-wrap')) closeAllDropdowns();
+});
+
+/* ════════ PDF-Generierung (jsPDF + AutoTable) ════════ */
+function generatePDF() {
+  if (typeof window.jspdf === 'undefined') {
+    alert('PDF-Bibliothek nicht erreichbar. Bitte Internetverbindung prüfen und Seite neu laden.');
+    return;
+  }
+  const btn = document.querySelector('.btn-pdf');
+  btn.disabled = true;
+  btn.innerHTML = '&#9203; Generiere&hellip;';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const M = 10, PW = 210, CW = PW - 2 * M;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+    function fD(v) {
+      if (!v) return '';
+      const [y,m,d] = v.split('-');
+      return `${d}.${m}.${y}`;
+    }
+
+    const G = {
+      aufnr:   document.getElementById('g-aufnr').value,
+      von:     fD(document.getElementById('g-von').value),
+      bis:     fD(document.getElementById('g-bis').value),
+      ort:     document.getElementById('g-ort').value,
+      strasse: document.getElementById('g-strasse').value,
+      baum:    document.getElementById('g-baum').value,
+      sparte:  document.getElementById('g-sparte')?.value || '',
+    };
+    G.zeitraum = [G.von, G.bis].filter(Boolean).join(' – ');
+
+    // ── Seitenkopf ──────────────────────────────────────────────
+    function pageHead(title) {
+      let y = M;
+      // Logo oben rechts
+      try { doc.addImage(ROTH_LOGO, 'PNG', PW-M-16, y, 16, 16); } catch(e) {}
+      // Blauer Titelbalken (etwas schmäler wegen Logo)
+      doc.setFillColor(26,58,107);
+      doc.rect(M, y, CW-18, 7, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(255,255,255);
+      doc.text(title + '  |  Roth GmbH Tiefbau Kaiserslautern', M+2, y+4.8);
+      y += 9;
+      const sparteStr = G.sparte || '';
+      const info = [
+        ['AUFTRAGSNUMMER / -TEXT', G.aufnr,   'AUSFUEHRUNGSZEITRAUM', G.zeitraum],
+        ['ORT',                    G.ort,      'STRASSE / NR.',        G.strasse],
+        ['BAUMASSNAHME',           G.baum,     'SPARTE / INTERNE NR.', sparteStr],
+      ];
+      for (const [l1,v1,l2,v2] of info) {
+        doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(100,100,100);
+        doc.text(l1, M, y+2.5);
+        if (l2) doc.text(l2, M+CW/2+4, y+2.5);
+        y += 3.5;
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(0,0,0);
+        doc.text(v1||'—', M, y+2.5);
+        if (v2) doc.text(v2||'—', M+CW/2+4, y+2.5);
+        y += 5;
+      }
+      return y + 1;
+    }
+
+    // ── Zeilen aus pos-tbl lesen ─────────────────────────────────
+    function getRows(table) {
+      const rows = [];
+      table.querySelectorAll('tbody tr').forEach(tr => {
+        const mgInp = tr.querySelector('input[type=number]');
+        if (!mgInp) return;
+        const mg = parseFloat(mgInp.value||'0');
+        if (mg === 0) return;
+        const fmt = (v, eh) => {
+          if (eh && eh.trim().toUpperCase() === 'M') return v.toFixed(2).replace('.',',');
+          return v%1===0 ? String(v) : v.toFixed(2).replace('.',',');
+        };
+        if (tr.querySelector('.s-search')) {
+          const nr  = tr.querySelector('.s-search')?.value||'';
+          const bez = tr.querySelector('.td-bez input')?.value||'';
+          const eh  = tr.querySelector('select')?.value||'';
+          const allTxt = [...tr.querySelectorAll('input[type=text]:not(.s-search)')];
+          const erl = allTxt.length > 1 ? allTxt[allTxt.length-1].value : '';
+          rows.push([nr, bez, eh, fmt(mg, eh), erl]);
+        } else {
+          const nr  = tr.querySelector('.td-nr')?.textContent?.trim()||'';
+          const bez = tr.querySelector('.td-bez')?.textContent?.trim()||'';
+          const eh  = tr.querySelector('.td-eh')?.textContent?.trim()||'';
+          rows.push([
+            nr, bez, eh,
+            fmt(mg, eh),
+            tr.querySelector('input[type=text]')?.value||''
+          ]);
+        }
+      });
+      return rows;
+    }
+
+    // ── Abschnitt zeichnen ───────────────────────────────────────
+    function drawSection(y, title, rows) {
+      doc.setFillColor(245,247,250); doc.setDrawColor(180,180,180);
+      doc.rect(M, y, CW, 5.5, 'FD');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(40,40,40);
+      doc.text(title.replace(/\(742 Positionen durchsuchbar\)/,'').trim(), M+2, y+3.8);
+      doc.autoTable({
+        startY: y+5.5, margin:{left:M,right:M},
+        head: [['Pos.-Nr.','Bezeichnung','Einh.','Menge','Erläuterung']],
+        body: rows,
+        styles: {fontSize:8, cellPadding:[1.5,2,1.5,2], overflow:'linebreak'},
+        headStyles: {fillColor:[220,228,240], textColor:[0,0,0], fontStyle:'bold', fontSize:8},
+        columnStyles: {
+          0:{cellWidth:26,fontSize:7},
+          1:{cellWidth:'auto'},
+          2:{cellWidth:14,halign:'center'},
+          3:{cellWidth:18,halign:'right'},
+          4:{cellWidth:38}
+        },
+        alternateRowStyles: {fillColor:[250,251,253]},
+      });
+      return doc.lastAutoTable.finalY;
+    }
+
+    // ── Unterschrift ─────────────────────────────────────────────
+    function sig(y) {
+      y += 8;
+      if (y > 272) { doc.addPage(); y = M+10; }
+      doc.setDrawColor(80,80,80);
+      doc.line(M, y, M+CW/2-8, y);
+      doc.line(M+CW/2+8, y, M+CW, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(90,90,90);
+      doc.text(new Date().toLocaleDateString('de-DE') + ', Unterschrift AN', M, y+3.5);
+      doc.text('Datum, Unterschrift AG', M+CW/2+8, y+3.5);
+    }
+
+    // ── Abschnitte aus Tab lesen ─────────────────────────────────
+    function getSections(tabId) {
+      const result = []; let cur = null;
+      document.getElementById(tabId).querySelectorAll('.sec-hdr,.pos-tbl').forEach(el => {
+        if (el.classList.contains('sec-hdr')) { cur = {title:el.textContent.trim(), table:null}; result.push(cur); }
+        else if (cur && !cur.table) cur.table = el;
+      });
+      return result;
+    }
+
+    const mode = document.getElementById('g-mode').value;
+    let firstPage = true;
+    let y = M;
+
+    // ── W T (optional) ───────────────────────────────────────────
+    if (mode !== 'wm') {
+      y = pageHead('Aufmaßblatt Koord. T — Tiefbau E/G/W');
+      for (const s of getSections('tab-wt')) {
+        if (!s.table) continue;
+        const rows = getRows(s.table);
+        if (!rows.length) continue;
+        y = drawSection(y+2, s.title, rows) + 3;
+      }
+      sig(y);
+      firstPage = false;
+    }
+
+    // ── W M (optional) ───────────────────────────────────────────
+    if (mode !== 'wt') {
+      if (!firstPage) doc.addPage();
+      firstPage = false;
+      y = pageHead('Aufmaßblatt Koord. M — Montage G/W');
+      for (const s of getSections('tab-wm')) {
+        if (!s.table) continue;
+        const rows = getRows(s.table);
+        if (!rows.length) continue;
+        y = drawSection(y+2, s.title, rows) + 3;
+      }
+      sig(y);
+    }
+
+    // -- SEITE 3: Oberflaechenzettel (nur bei W T oder W T + W M) ----
+    if (mode !== 'wm') { doc.addPage(); y = M;
+    const ROW = 7, LBL = 55;
+
+    function oflSecHdr(text, red) {
+      doc.setFillColor(...(red ? [139,0,0] : [26,58,107]));
+      doc.rect(M, y, CW, 6.5, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+      doc.text(text, M+2, y+4.5); y += 6.5;
+    }
+
+    function oflDrawRow(label, drawValue, h) {
+      // Font muss VOR splitTextToSize gesetzt sein, damit die Messung stimmt
+      doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      const lblLines = doc.splitTextToSize(label, LBL-4);
+      const lh = h || Math.max(ROW, lblLines.length * 4.8 + 2.5);
+      doc.setDrawColor(150,150,150);
+      doc.setFillColor(240,243,248); doc.rect(M, y, LBL, lh, 'FD');
+      doc.setTextColor(0,0,0);
+      doc.text(lblLines, M+2, y+4.2);
+      doc.setFillColor(255,255,255); doc.rect(M+LBL, y, CW-LBL, lh, 'D');
+      if (drawValue) drawValue(M+LBL, y, CW-LBL, lh);
+      y += lh;
+    }
+
+    function oflRow(label, value) {
+      oflDrawRow(label, (x,yy) => {
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(0,0,0);
+        doc.text(value||'', x+2, yy+4.8);
+      });
+    }
+
+    function oflRow2(l1, v1, l2, v2) {
+      const hw = CW/2;
+      doc.setDrawColor(150,150,150); doc.setFillColor(240,243,248);
+      doc.rect(M, y, 32, ROW, 'FD'); doc.rect(M+hw, y, 35, ROW, 'FD');
+      doc.setFillColor(255,255,255);
+      doc.rect(M+32, y, hw-32, ROW, 'D'); doc.rect(M+hw+35, y, hw-35, ROW, 'D');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,0,0);
+      doc.text(l1, M+2, y+4.8); doc.text(l2, M+hw+2, y+4.8);
+      doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      doc.text(v1||'', M+34, y+4.8); doc.text(v2||'', M+hw+37, y+4.8);
+      y += ROW;
+    }
+
+    function oflCbRow(label, items) {
+      oflDrawRow(label, (x,yy) => {
+        let cx = x+3;
+        items.forEach(({text, checked}) => {
+          doc.setDrawColor(0,0,0); doc.setFillColor(255,255,255);
+          doc.rect(cx, yy+1.8, 3.2, 3.2, 'FD');
+          if (checked) { doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(0,0,0); doc.text('X', cx+0.6, yy+4.5); }
+          doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(0,0,0);
+          doc.text(text, cx+4.5, yy+4.8);
+          cx += doc.getTextWidth(text)+8;
+        });
+      });
+    }
+
+    function oflJaNein(label, radioName) {
+      let isJa = null;
+      for (const r of document.querySelectorAll(`input[name="${radioName}"]`))
+        if (r.checked) isJa = r.closest('label')?.textContent?.trim().toLowerCase() === 'ja';
+      oflDrawRow(label, (x,yy) => {
+        ['ja','nein'].forEach((opt,i) => {
+          const cx = x+5+i*22, checked = isJa === (opt==='ja');
+          doc.setDrawColor(0,0,0); doc.setFillColor(255,255,255);
+          doc.circle(cx+2, yy+3.5, 2, 'D');
+          if (checked) { doc.setFillColor(0,0,0); doc.circle(cx+2, yy+3.5, 1, 'F'); doc.setFillColor(255,255,255); }
+          doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(0,0,0);
+          doc.text(opt, cx+5.5, yy+4.8);
+        });
+      });
+    }
+
+    function oflTextarea(label, value) {
+      const lines = doc.splitTextToSize(value||'', CW-LBL-4);
+      const h = Math.max(ROW, lines.length*4.5+4);
+      oflDrawRow(label, (x,yy) => {
+        if (lines.length) { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(0,0,0); doc.text(lines, x+2, yy+4.8); }
+      }, h);
+    }
+
+    // Formtitel
+    doc.setFillColor(26,58,107); doc.rect(M,y,CW,8,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(255,255,255);
+    doc.text('Oberflaechenwiederherstellung (Abnahme Kleinbaustellen)', M+2, y+5.5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+    doc.text('Formblatt FB KT507 | Rev. 00 | INTERN', PW-M-2, y+5.5, {align:'right'});
+    y += 8;
+
+    // Objekt / Baumassnahme
+    oflSecHdr('Objekt / Baumassnahme');
+    const sparteLbl = [...document.querySelectorAll('#tab-ofl .ofl-lbl')].find(l => l.textContent.trim() === 'Sparte:');
+    const sparteItems = sparteLbl
+      ? [...sparteLbl.closest('tr').querySelectorAll('.cb-item')].map(li => ({
+          text: li.textContent.trim(), checked: !!li.querySelector('input')?.checked
+        }))
+      : [];
+    oflCbRow('Sparte:', sparteItems);
+    oflRow('Baumassnahme:', document.getElementById('ofl-baum')?.value);
+    oflRow('Auftragsnummer(n):', document.getElementById('ofl-aufnr')?.value);
+    oflRow2('Ort:', document.getElementById('ofl-ort')?.value, 'Strasse / Nr.:', document.getElementById('ofl-strasse')?.value);
+
+    // Befestigung
+    oflSecHdr('Befestigung');
+    doc.setDrawColor(150,150,150); doc.setFillColor(221,230,240);
+    doc.rect(M,y,LBL,6,'FD'); doc.rect(M+LBL,y,32,6,'FD'); doc.rect(M+LBL+32,y,CW-LBL-32,6,'FD');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,0,0);
+    doc.text('Befestigungsart', M+2, y+4); doc.text('Flaeche/Laenge', M+LBL+2, y+4); doc.text('Art der Befestigung', M+LBL+34, y+4);
+    y += 6;
+    ['Straßenober','Straßenrinne','Bordstein','Gehweg','Privatgr','Sonstiges'].forEach(pfx => {
+      document.querySelectorAll('#tab-ofl .ofl-lbl').forEach(lbl => {
+        if (!lbl.textContent.startsWith(pfx)) return;
+        const inps = lbl.closest('tr')?.querySelectorAll('input');
+        const v1=inps?.[0]?.value||'', v2=inps?.[1]?.value||'';
+        doc.setFillColor(255,255,255); doc.setDrawColor(150,150,150);
+        doc.rect(M,y,LBL,ROW,'D'); doc.rect(M+LBL,y,32,ROW,'D'); doc.rect(M+LBL+32,y,CW-LBL-32,ROW,'D');
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(0,0,0);
+        doc.text(lbl.textContent.trim(), M+2, y+4.8); doc.text(v1, M+LBL+2, y+4.8); doc.text(v2, M+LBL+34, y+4.8);
+        y += ROW;
+      });
+    });
+
+    // Fertigmeldung
+    oflSecHdr('Fertigmeldung durch Auftragnehmer');
+    oflRow('Firma:', 'Roth GmbH');
+    oflRow('Datum der Fertigstellung:', document.getElementById('ofl-datum')?.value||'');
+    oflRow('Verantwortlicher des AN:', document.querySelector('#tab-ofl [placeholder="Name / Funktion"]')?.value||'');
+
+    // Abnahme durch SWK
+    oflSecHdr('Abnahme durch SWK');
+    oflJaNein('Baufeld geraeumt - Absperrungen:', 'ab1');
+    oflJaNein('Baufeld geraeumt - Verkehrsschilder:', 'ab2');
+    oflJaNein('Baufeld geraeumt - Aushub:', 'ab3');
+    oflJaNein('Bei Asphalt: Fugenverguss/TOK-Band:', 'ab4');
+    const km = document.getElementById('cb-km')?.checked;
+    const fm = document.getElementById('cb-fm')?.checked;
+    oflCbRow('Festgestellt wurden:', [
+      {text:'keine Maengel', checked:!!km},
+      {text:'folgende Maengel / laut Anlage(n)', checked:!!fm},
+    ]);
+    const mangel = document.querySelectorAll('#tab-ofl textarea')?.[0]?.value||'';
+    oflTextarea('Maengelbeschreibung:', mangel);
+    const mangelBisInp = document.querySelector('#tab-ofl input[type=date][style*="max-width"]');
+    oflRow('Maengel zu beseitigen bis:', mangelBisInp?.value ? fD(mangelBisInp.value) : '');
+    const bbRows = [...document.querySelectorAll('#tab-ofl .ofl-tbl tr')]
+      .filter(tr => tr.querySelector('.ofl-lbl')?.textContent?.includes('Baubeauftragter'));
+    if (bbRows[0]) { const inp=bbRows[0].querySelectorAll('input'); oflRow2('Baubeauftragter SWK:', inp?.[0]?.value||'', 'Datum / Unterschrift:', inp?.[1]?.value||''); }
+
+    // Bei Maengel
+    oflSecHdr('Bei Maengel', true);
+    oflJaNein('Maengel fristgerecht beseitigt:', 'mn1');
+    const bemText = document.querySelectorAll('#tab-ofl textarea')?.[1]?.value||'';
+    oflTextarea('Bemerkungen:', bemText);
+    if (bbRows[1]) { const inp=bbRows[1].querySelectorAll('input'); oflRow2('Baubeauftragter SWK:', inp?.[0]?.value||'', 'Datum / Unterschrift:', inp?.[1]?.value||''); }
+    } // Ende OFL-Block (nur bei mode !== 'wm')
+
+    // ── Speichern ────────────────────────────────────────────────
+    const fn = (G.aufnr||'Aufmass').replace(/[^a-zA-Z0-9_\-]/g,'_');
+    const dt = new Date().toLocaleDateString('de-DE').replace(/\./g,'-');
+    doc.save('SWK-Koordiniert_'+fn+'_'+dt+'.pdf');
+
+  } catch(e) {
+    alert('Fehler bei der PDF-Generierung: '+e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '&#128438; PDF generieren';
+  }
+}
+</script>
+</body>
+</html>

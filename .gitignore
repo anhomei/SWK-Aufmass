@@ -1,0 +1,5 @@
+# Enthält LV-Preise bzw. internen Verrechnungssatz — nicht ins öffentliche Repo
+vorlage/lv2026.json
+nachkalkulation/
+__pycache__/
+.env
