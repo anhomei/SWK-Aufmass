@@ -434,7 +434,12 @@ def main():
     # Einfüll-Knopf als Lesezeichen (Bookmarklet) + Installationsseite
     from urllib.parse import quote
     knopf = (ROOT / "portal-knopf" / "aufmass-einstellen.js").read_text(encoding="utf-8")
-    href = "javascript:" + quote(knopf, safe="")
+    # Für das Lesezeichen verkleinern (Firefox: max. 65.536 Zeichen je Lesezeichen): Blockkommentar am Anfang,
+    # reine Kommentarzeilen und Einrückungen entfernen; nur nötige Zeichen %-kodieren.
+    knopf = re.sub(r"^/\*.*?\*/\s*", "", knopf, flags=re.S)
+    zeilen = [z.strip() for z in knopf.splitlines()]
+    knopf = "\n".join(z for z in zeilen if z and not z.startswith("//"))
+    href = "javascript:" + quote(knopf, safe=" !$&'()*+,-./:;=?@[]^_`{|}~<>\"")
     (ROOT / "portal-knopf" / "installieren.html").write_text(INSTALL.replace("__HREF__", html.escape(href, quote=True)), encoding="utf-8")
 
     for key in pages:
