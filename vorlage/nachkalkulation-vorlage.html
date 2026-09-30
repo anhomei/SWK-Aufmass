@@ -130,6 +130,7 @@ body.no-m .m-only { display:none !important; }
   <div><h1>Nachkalkulation SWK</h1><p>Aufmaß des Monteurs prüfen &middot; THÜGA-LV 2026 &middot; nur intern</p></div>
   <div class="btns">
     <button class="btn btn-red" onclick="pdfExport()">PDF</button>
+    <button class="btn btn-ghost" onclick="portalDatei()" title="Positionen + Mengen für den Einfüll-Knopf in Web-MaxX">Datei fürs Portal</button>
     <button class="btn btn-ghost" onclick="speichern()">Speichern</button>
     <button class="btn btn-ghost" onclick="laden()">Laden</button>
     <button class="btn btn-ghost" onclick="neu()">Neu</button>
@@ -601,6 +602,28 @@ function speichern() {
   const blob = new Blob([JSON.stringify(daten, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = dateiname('json');
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* Datei für den Einfüll-Knopf (portal-knopf/webmaxx-einfuellen.js): Pos.-Nr. + Menge, gleiche Nr. zusammengefasst */
+function portalDatei() {
+  const sum = new Map();
+  for (const r of zeilen()) {
+    const nr = String(r.nr || '').replace(/\D/g, '');
+    if (!nr) continue;
+    const alt = sum.get(nr);
+    if (alt) alt.menge = r2(alt.menge + r.menge);
+    else sum.set(nr, { nr, bez: r.bez, eh: r.eh, menge: r.menge });
+  }
+  if (!sum.size) { alert('Keine Positionen mit Menge vorhanden.'); return; }
+  if (!S.kopf.aufnr && !confirm('Ohne Auftragsnummer kann der Einfüll-Knopf nicht prüfen, ob die Datei zum geöffneten Auftrag passt. Trotzdem erstellen?')) return;
+  const daten = { format: 'roth-webmaxx-v1', erstellt: new Date().toISOString(), auftragsnummer: S.kopf.aufnr || '',
+                  sparte: STRUKTUR[S.sparte].name, positionen: [...sum.values()] };
+  const blob = new Blob([JSON.stringify(daten, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Portal_${(S.kopf.aufnr || 'ohne-Nr').replace(/[^a-zA-Z0-9_\-]/g, '_')}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }

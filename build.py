@@ -294,6 +294,29 @@ footer { max-width:960px; margin:0 auto; padding:0 16px 30px; font-size:12px; co
 """
 
 
+INSTALL = """<!DOCTYPE html>
+<html lang="de"><head><meta charset="UTF-8"><title>Einfüll-Knopf Web-MaxX</title>
+<style>body{font-family:Inter,Segoe UI,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;color:#242021;line-height:1.55}
+h1{font-family:Oswald,Arial Narrow,sans-serif;text-transform:uppercase;border-bottom:3px solid #EE1D25;padding-bottom:6px}
+a.k{display:inline-block;background:#EE1D25;color:#fff;font-weight:700;padding:10px 18px;border-radius:5px;text-decoration:none;font-size:16px}
+ol li{margin-bottom:6px} .hint{color:#696667;font-size:14px}</style></head><body>
+<h1>Einfüll-Knopf: Aufmaß → Web-MaxX</h1>
+<p><b>Einmalig einrichten:</b> Diesen roten Knopf mit der Maus in die Chrome-Lesezeichenleiste ziehen
+(Lesezeichenleiste einblenden: <b>Strg + Umschalt + B</b>).</p>
+<p><a class="k" href="__HREF__">Aufmaß → Web-MaxX</a></p>
+<h2>Benutzen</h2>
+<ol>
+<li>Nachkalkulation: Aufmaß eintragen → <b>„Datei fürs Portal“</b> (Datei <code>Portal_&lt;Auftrag&gt;.json</code>).</li>
+<li>Web-MaxX: Auftrag wählen, links die <b>offene</b> Erfassung anklicken (ggf. Planung mit „Ja“ übernehmen).</li>
+<li>In der Lesezeichenleiste auf <b>„Aufmaß → Web-MaxX“</b> klicken, Datei wählen, Liste bestätigen.</li>
+<li>Eingetragene Mengen kontrollieren, dann selbst <b>Speichern</b> (und später Übergeben).</li>
+</ol>
+<p class="hint">Der Knopf warnt, wenn der Auftrag nicht auf Kontrakt …00053 läuft oder die Auftragsnummer nicht zur Datei passt.
+Er klickt nie Speichern oder Übergeben.</p>
+</body></html>
+"""
+
+
 # ── Nachkalkulation: Positionsstruktur aus den fertigen Seiten lesen ──────────
 def extract_structure(page_html, sheet_titles):
     """Liest Abschnitte + Positionen aus tab-wt / tab-wm — exakt wie im Aufmaß-PDF."""
@@ -361,6 +384,12 @@ def main():
               .replace("/*__LV__*/[]", json.dumps(lv, ensure_ascii=False))
               .replace("__LOGO__", logo))
     (NACHKALK / "nachkalkulation.html").write_text(out, encoding="utf-8")
+
+    # Einfüll-Knopf als Lesezeichen (Bookmarklet) + Installationsseite
+    from urllib.parse import quote
+    knopf = (ROOT / "portal-knopf" / "webmaxx-einfuellen.js").read_text(encoding="utf-8")
+    href = "javascript:" + quote(knopf, safe="")
+    (ROOT / "portal-knopf" / "installieren.html").write_text(INSTALL.replace("__HREF__", html.escape(href, quote=True)), encoding="utf-8")
 
     for key in pages:
         n = sum(len(s["rows"]) for sh in struct[key]["sheets"] for s in sh["sections"])

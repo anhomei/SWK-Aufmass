@@ -3,3 +3,5 @@ vorlage/lv2026.json
 nachkalkulation/
 __pycache__/
 .env
+# Einfüll-Knopf nutzt interne Web-MaxX-Schnittstellen — nicht ins öffentliche Repo
+portal-knopf/
