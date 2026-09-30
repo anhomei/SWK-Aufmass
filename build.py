@@ -192,9 +192,53 @@ BACKLINK = ('<div class="container">\n<div class="no-print" style="margin:0 0 8p
             '<a href="./" style="color:var(--color-ink, #242021);text-decoration:none;font-weight:600;">&larr; Zur Auswahl (Wasser / Gas / Strom / Koordiniert)</a></div>')
 
 
+# Abrechnungsteil in der gespeicherten Aufmaß-Datei: Grundlage für den Einfüll-Knopf in Web-MaxX.
+# Die bisherigen Formularwerte (i0, i1, …) bleiben unverändert, Laden funktioniert wie gehabt.
+ABRECHNUNG_JS = """/* ════════ Abrechnungsteil für Web-MaxX (Einfüll-Knopf) ════════ */
+function rothAbrechnung() {
+  const mode = document.getElementById('g-mode').value;
+  const blaetter = [['T', 'tab-wt'], ['M', 'tab-wm']].filter(([k]) => mode === 'both' || (mode === 'wt' && k === 'T') || (mode === 'wm' && k === 'M'));
+  const pos = [];
+  for (const [blatt, id] of blaetter) {
+    document.querySelectorAll('#' + id + ' .pos-tbl tbody tr').forEach(tr => {
+      const mg = tr.querySelector('input[type=number]');
+      const m = parseFloat(mg && mg.value || '0');
+      if (!m) return;
+      let nr, bez, eh;
+      if (tr.querySelector('.s-search')) {
+        nr = tr.querySelector('.s-search').value.trim();
+        bez = tr.querySelector('.td-bez input')?.value || '';
+        eh = tr.querySelector('select')?.value || '';
+      } else {
+        nr = tr.querySelector('.td-nr').textContent.trim();
+        bez = tr.querySelector('.td-bez').textContent.trim();
+        eh = tr.querySelector('.td-eh').textContent.trim();
+      }
+      if (!/^\\d+$/.test(nr)) return;
+      const alt = pos.find(p => p.nr === nr);
+      if (alt) alt.menge = Math.round((alt.menge + m) * 1000) / 1000;
+      else pos.push({ nr, bez, eh, menge: m, blatt });
+    });
+  }
+  const v = id => (document.getElementById(id) || {}).value || '';
+  return { format: 'roth-aufmass-v1', sparte: '__SPARTE__', gespeichert: new Date().toISOString(),
+           kopf: { auftragsnummer: v('g-aufnr'), von: v('g-von'), bis: v('g-bis'), ort: v('g-ort'),
+                   strasse: v('g-strasse'), baumassnahme: v('g-baum'), sparteNr: v('g-sparte') },
+           positionen: pos };
+}
+
+function saveData() {"""
+
+
+def mit_abrechnung(src, sparte):
+    src = replace_once(src, "function saveData() {", ABRECHNUNG_JS.replace("__SPARTE__", sparte))
+    return replace_once(src, "JSON.stringify(collectState(), null, 2)",
+                        "JSON.stringify(Object.assign(collectState(), { roth: rothAbrechnung() }), null, 2)")
+
+
 def build_wasser():
     src = replace_once(VORLAGE, '<div class="container">', BACKLINK)
-    return src
+    return mit_abrechnung(src, "Wasser")
 
 
 def build_sparte(key, cfg):
@@ -235,7 +279,7 @@ def build_sparte(key, cfg):
     src = replace_once(src, "initRows('s-wm', 4);\n", "initRows('s-wm', 4);\nsetAufmassMode();\n")
 
     src = replace_once(src, '<div class="container">', BACKLINK)
-    return src
+    return mit_abrechnung(src, cfg["name"])
 
 
 # ── Startseite ────────────────────────────────────────────────────────────────
