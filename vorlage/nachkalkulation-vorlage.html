@@ -150,7 +150,8 @@ body.no-m .m-only { display:none !important; }
           <option value="koordiniert">Koordiniert (E/G/W)</option>
         </select></div>
       <div class="fg"><label for="k-aufnr">Auftragsnummer</label><input id="k-aufnr" data-k="aufnr"></div>
-      <div class="fg wide"><label for="k-ort">Ort / Straße</label><input id="k-ort" data-k="ort"></div>
+      <div class="fg"><label for="k-ort">Ort</label><input id="k-ort" data-k="ort"></div>
+      <div class="fg"><label for="k-strasse">Straße / Nr.</label><input id="k-strasse" data-k="strasse" title="Wird bei Schieber-/Hydranten-Aufträgen im Portal als Leistungsort „Roth, Straße Nr.“ eingetragen"></div>
       <div class="fg"><label for="k-monteur">Monteur / Kolonne</label><input id="k-monteur" data-k="monteur"></div>
       <div class="fg"><label for="k-von">Ausführung von</label><input id="k-von" type="date" data-k="von"></div>
       <div class="fg"><label for="k-bis">Ausführung bis</label><input id="k-bis" type="date" data-k="bis"></div>
@@ -618,8 +619,10 @@ function portalDatei() {
   }
   if (!sum.size) { alert('Keine Positionen mit Menge vorhanden.'); return; }
   if (!S.kopf.aufnr && !confirm('Ohne Auftragsnummer kann der Einfüll-Knopf nicht prüfen, ob die Datei zum geöffneten Auftrag passt. Trotzdem erstellen?')) return;
+  if ((!S.kopf.von || !S.kopf.bis) && !confirm('Ausführungszeitraum (von/bis) fehlt – dann werden Beginn/Ende im Portal nicht ausgefüllt. Trotzdem erstellen?')) return;
   const daten = { format: 'roth-webmaxx-v1', erstellt: new Date().toISOString(), auftragsnummer: S.kopf.aufnr || '',
-                  sparte: STRUKTUR[S.sparte].name, positionen: [...sum.values()] };
+                  sparte: STRUKTUR[S.sparte].name, ort: S.kopf.ort || '', strasse: S.kopf.strasse || '',
+                  von: S.kopf.von || '', bis: S.kopf.bis || '', positionen: [...sum.values()] };
   const blob = new Blob([JSON.stringify(daten, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -683,7 +686,7 @@ function pdfExport() {
   let y = M + 14;
   const k = S.kopf;
   const info = [
-    ['Auftragsnummer', k.aufnr, 'Ort / Straße', k.ort],
+    ['Auftragsnummer', k.aufnr, 'Ort / Straße', [k.ort, k.strasse].filter(Boolean).join(', ')],
     ['Monteur / Kolonne', k.monteur, 'Ausführung', [fD(k.von), fD(k.bis)].filter(Boolean).join(' – ')],
     ['Interne Nr.', k.intern, 'Erstellt', new Date().toLocaleDateString('de-DE')],
   ];
